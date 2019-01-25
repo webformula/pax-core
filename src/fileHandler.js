@@ -18,14 +18,14 @@ function getMime(file) {
 
 exports.scripts = (params) => {
   validate(params);
-  if (params.path.includes('wcn.js')) return `${main_js(params)}\n${customElements.getStaticFile()}`;
+  if (params.path.includes('pax.js')) return `${main_js(params)}\n${customElements.getStaticFile()}`;
   if (params.path.includes('load-service-worker.js')) return `${serviceWorkerLoader_js()}`;
   if (params.path.includes('service-worker.js')) return `${serviceWorker_js(params)}`;
 };
 
 exports.css = (params) => {
    validate(params);
-   if (params.path.includes('wcn.css')) return `${customElements.getStaticExternalCSS()}`;
+   if (params.path.includes('pax.css')) return `${customElements.getStaticExternalCSS()}`;
 };
 
 exports.expressFileHandler = (req, res, next) => {
