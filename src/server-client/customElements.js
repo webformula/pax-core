@@ -41,13 +41,6 @@ function _getStaticFile() {
       ${Object
         .keys(components)
         .map(key => buildComponentScript(key, components[key]))
-        // .map(key => {
-        //   const instance = new components[key]();
-        //   return [
-        //     getTemplateElementAsIIFE(key, instance),
-        //     getClassAsString(key, instance)
-        //   ].join('\n');
-        // })
         .join('\n\n')}
     });
   `;
