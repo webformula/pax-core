@@ -47,9 +47,10 @@ module.exports = class HTMLElementExtended {
     let cstr = this.constructor.toString();
     // remove class declaration
     cstr = cstr.slice(cstr.indexOf('{') + 1, cstr.lastIndexOf('}'));
+
+    // --- add id so you can call the class methods easily ---
     // convert to camelcase and add a '$'
     const id = `$${name.replace(/\-([a-z])/g, m => m.toUpperCase()).replace(/-/,'')}`;
-
     // modify / add constructor
     const cpos = cstr.indexOf('constructor');
     if (cpos > -1) {
