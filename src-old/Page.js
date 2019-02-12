@@ -14,6 +14,7 @@ module.exports = class Page {
   connectedCallback() {}
   html() { return ''; }
   css() { return ''; }
+  serverRender() {}
   render() {}
 
   template() {

@@ -1,6 +1,6 @@
 const { html } = require('common-tags');
 const fs = require('fs');
-const buildPage = require('./buiildPage');
+const pageBuilder = require('../server-client/pageBuilder');
 const buildMainScript = require('../server-client/buildMainScript');
 const customElements = require('../server-client/customElements');
 
@@ -8,9 +8,9 @@ const customElements = require('../server-client/customElements');
 
 module.exports = ({ pageMapper, layout, indexHTML }) => {
   const mainScript = buildMainScript.client(pageMapper);
-  const indexPage = buildPage(pageMapper.getIndex());
+  const indexPage = pageBuilder.client(pageMapper.getIndex());
   const pages = Object.keys(pageMapper.modules).map(uri => {
-    return buildPage(pageMapper.modules[uri]);
+    return pageBuilder.client(pageMapper.modules[uri]);
   });
   const pageClasses = pages.map(p => p.classStr).join('\n\n');
   const headScript = html`
@@ -20,7 +20,6 @@ module.exports = ({ pageMapper, layout, indexHTML }) => {
       ${customElements.getStaticFile()}
 
       ${pageClasses}
-
 
       window.${indexPage.id} = new ${indexPage.className}();
       setTimeout(function () {

@@ -1,17 +1,18 @@
 const { html } = require('common-tags');
-const Page = require('../server-client/Page');
+const Page = require('./Page');
 
-module.exports = (page) => {
-  let instance = undefined;
+exports.client = (page) => {
+  const instance = new page();
+  return build(instance);
+};
 
-  // is a class
-  if (page.prototype && page.prototype.constructor) {
-    instance = new page();
-  // returns a function that returns class.build() returned
-  } else if (typeof page === 'function') {
-    instance = page();
-  }
+exports.server = async (page) => {
+  const instance = new page();
+  if (serverRender) await instance.serverRender();
+  return build(instance);
+};
 
+function build(instance) {
   const className = getClassName(instance);
   const template = buildTemplate(instance);
 
@@ -22,7 +23,7 @@ module.exports = (page) => {
     classStr: instance.constructor.toString(),
     template
   };
-};
+}
 
 
 function buildTemplate(instance) {

@@ -34,7 +34,7 @@ module.exports = class PageMapper {
   }
 
   getClassName(mod) {
-    return (mod.prototype && mod.prototype.constructor) ? mod.name : mod().constructor.name;
+    return mod.name;
   }
 
   getIndex() {
