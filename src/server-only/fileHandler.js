@@ -1,8 +1,8 @@
 const config = require('./config');
-const customElements = require('./customElements');
-const main_js = require('./client-files/main.js');
-const serviceWorkerLoader_js = require('./client-files/service-worker-loader.js');
-const serviceWorker_js = require('./client-files/service-worker.js');
+const customElements = require('../server-client/customElements');
+const buildMainScripts = require('../server-client/buildMainScript');
+const serviceWorkerLoader_js = require('./service-worker-loader.js');
+const serviceWorker_js = require('./service-worker.js');
 
 function validate(params) {
   if (!params) throw Error('Requires params');
@@ -18,7 +18,7 @@ function getMime(file) {
 
 exports.scripts = (params) => {
   validate(params);
-  if (params.path.includes('pax.js')) return `${main_js(params)}\n${customElements.getStaticFile()}`;
+  if (params.path.includes('pax.js')) return `${buildMainScripts.server()}\n\n${customElements.getStaticFile()}`;
   if (params.path.includes('load-service-worker.js')) return `${serviceWorkerLoader_js()}`;
   if (params.path.includes('service-worker.js')) return `${serviceWorker_js(params)}`;
 };

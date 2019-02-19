@@ -1,6 +1,6 @@
 {
   "name": "@webformula/pax-core",
-  "version": "0.0.1-beta",
+  "version": "0.1.0-beta",
   "description": "PAX pages and components tool set. Build, render, and serve web-pages and web-components",
   "main": "index.js",
   "scripts": {
@@ -15,11 +15,8 @@
   "author": "Ben Rubin (B-3PO)",
   "license": "MIT",
   "dependencies": {
+    "common-tags": "^1.8.0",
     "glob": "^7.1.3"
-  },
-  "devDependencies": {
-    "express": "^4.16.4",
-    "morgan": "^1.9.1"
   },
   "bugs": {
     "url": "https://github.com/webformula/pax-core/issues"
