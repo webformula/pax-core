@@ -29,19 +29,6 @@ module.exports = class Router {
     if (GETParameters) url += `?${GETParameters}`;
     window.location.hash = url;
     return this.changePage(match.className);
-
-    // TODO handle
-
-    // const handler = match.route.handler;
-    // let routeInfo = match.route;
-    // if (handler) {
-    //   routeInfo = match.route.route instanceof RegExp ?
-    //     handler(...(match.match.slice(1, match.match.length))) :
-    //     handler(match.params, GETParameters);
-    // }
-
-    // events.emit('$routeChangeHandler', routeInfo);
-    // events.emit('routeChangeEnd', { route: _match.route.route, path: _path });
   }
 
   changePage(className) {

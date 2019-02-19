@@ -6,7 +6,7 @@ const PageMapper = require('./server-client/PageMapper');
 const Page = require('./server-client/Page');
 const buildClient = require('./client-only/build');
 const buildPage = require('./server-only/buildPage');
-const { html, css } = require('common-tags');
+const { html } = require('common-tags');
 
 module.exports = {
   HTMLElementExtended,
@@ -15,7 +15,7 @@ module.exports = {
   Page,
   buildClient,
   html,
-  css,
+  cssStr: html,
   setConfig: set,
   fileHandler,
   buildPage

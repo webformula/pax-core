@@ -20,7 +20,7 @@ module.exports = class HTMLElementExtended {
   render() {}
   externalCSS() { return ''; }
   css() { return ''; }
-  html() { return ''; }
+  template() { return ''; }
 };
 
 class ShadowRoot {

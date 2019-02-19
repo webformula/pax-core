@@ -13,7 +13,7 @@ const clienTags = `
     return finalString;
   };
   window.htmlSafe = window.html;
-  window.css = window.html;
+  window.cssStr = window.html;
 `;
 
 exports.client = (pageMapper) => {

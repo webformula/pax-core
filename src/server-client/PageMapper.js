@@ -1,5 +1,6 @@
 const path = require('path');
 const glob = require('glob');
+const Page = require('./Page');
 
 const resolverFileGlob = '**/*.js';
 const CWD = process.cwd();
@@ -20,7 +21,7 @@ module.exports = class PageMapper {
       const mod = require(path.join(CWD, f));
       a[convertedURL] = mod;
       if (convertedURL.includes('404')) this._404 = mod;
-      this.routeMap[convertedURL] = this.getClassName(mod)
+      this.routeMap[convertedURL] = this._getClassName(mod)
       return a;
     }, {});
   }
@@ -29,12 +30,9 @@ module.exports = class PageMapper {
     if (url && url[0] !== '/') url = '/' + url;
     if (this._root && url === '/') return this._root;
     const module = this.modules[url.replace(slash_REG, '')];
-    if (typeof module !== 'function' && typeof module !== 'object') return this._404 || noop;
-    return this.modules[url.replace(slash_REG, '')];
-  }
-
-  getClassName(mod) {
-    return mod.name;
+    // cannot find page class or page function
+    if (!module || (!(module.prototype instanceof Page) && typeof module !== 'function')) return this._404 || noop;
+    return module;
   }
 
   getIndex() {
@@ -47,12 +45,16 @@ module.exports = class PageMapper {
 
   set pageNotFount(url) {
     this._404 = this.findPage(url);
-    this.routeMap['/404'] = this.getClassName(this._404);
+    this.routeMap['/404'] = this._getClassName(this._404);
   }
 
   set root(url) {
     this._root = this.findPage(url);
-    this.routeMap['/'] = this.getClassName(this._root);
+    this.routeMap['/'] = this._getClassName(this._root);
+  }
+
+  _getClassName(mod) {
+    return mod.name;
   }
 };
 
