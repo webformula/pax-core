@@ -19,7 +19,7 @@ exports.server = async (page) => {
 
   // handle standard page class
   const instance = new page();
-  if (instance.serverRender) await instance.serverRender();
+  if (instance.serverInit) await instance.serverInit();
   return build(instance);
 };
 

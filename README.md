@@ -57,14 +57,19 @@ For a full example take a look at the documentation site [github](https://github
 This is a short example of serving a page from an Express server that can re-render on the font end. This example assumes you have previous knowledge of Node+Expressjs
 ```javascript
 // express endpoint
-const { fileHandler } = require('web-components-node');
+const { fileHandler, buildPage, PageMapper } = require('@webformula/pax-core');
+const pageMapper = new PageMapper('app/pages');
+pageMapper.pageNotFount = '404';
+pageMapper.root = 'introduction';
 app.use(fileHandler.expressFileHandler);
 app.get('/home', async (req, res) => {
-  res.send(pageTemplate(await buildPage()))
+  const page = pageMapper.findPage(req.path);
+  const { body, title, head } = await buildPage(page);
+  res.send(pageTemplate({ body, title, head }));
 });
 
 // page template
-const { html } = require('web-components-node');
+const { html } = require('@webformula/pax-core');
 
 function pageTemplate({ title, head, body }) {
   return html`
@@ -74,8 +79,8 @@ function pageTemplate({ title, head, body }) {
       <title>${title}</title>
       <meta http-equiv="Cache-Control" content="no-store" />
       <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-      <link rel="stylesheet" href="/wcn.css">
-      <script src="/wcn.js"></script>
+      <link rel="stylesheet" href="/pax.css">
+      <script src="/pax.js"></script>
       ${head}
     </head>
 
@@ -90,11 +95,11 @@ function pageTemplate({ title, head, body }) {
 const {
   Page,
   html
-} = require('web-components-node');
+} = require('@webformula/pax-core');
 const { getStates } = require('../services/states');
 
 
-const page = new class HomePage extends Page {
+module.exports = class HomePage extends Page {
   constructor() {
     super();
     this.list = [];
@@ -106,6 +111,10 @@ const page = new class HomePage extends Page {
 
   static title() {
     return 'home page'
+  }
+
+  async serverInit() {
+    this.states = await getStates();
   }
 
   async connectedCallback() {
@@ -148,11 +157,6 @@ const page = new class HomePage extends Page {
   citySelectChange(value) {
     this.selectedCity = value;
   }
-});
-
-async function buildPage() {
-  const states = await getStates();
-  return page.build({ states }); // { title, body, head }
 };
 ```
 
