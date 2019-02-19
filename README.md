@@ -1,4 +1,4 @@
-## P.A.C.T.S. (pages and components tool set)
+## pax-core
 
 ### Sections
 - [Introduction](#Introduction)
