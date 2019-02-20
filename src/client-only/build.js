@@ -6,7 +6,7 @@ const customElements = require('../server-client/customElements');
 
 // TODO can we make the pageMapper optional?
 
-module.exports = ({ pageMapper, layout, indexHTML }) => {
+module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
   const mainScript = buildMainScript.client(pageMapper);
   const indexPage = pageBuilder.client(pageMapper.getIndex());
   const pages = Object.keys(pageMapper.modules).map(uri => {
@@ -52,5 +52,6 @@ module.exports = ({ pageMapper, layout, indexHTML }) => {
     throw Error('Either `layout` or `indexHTML` is required');
   }
 
-  fs.writeFileSync('dist/index.html', pageLayout);
+  if (!fs.existsSync(path)) fs.mkdirSync(path);
+  fs.writeFileSync(`${path}/index.html`, pageLayout);
 };

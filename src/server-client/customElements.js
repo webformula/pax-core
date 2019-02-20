@@ -53,7 +53,7 @@ function buildComponentScript(name, _class) {
   const instance = eval('new '+partial);
 
   let cssSTR = '';
-  if (instance.cssFile) cssSTR = fs.readFileSync(path.join(__dirname, '../../',  instance.cssFile()));
+  if (instance.cssFile) cssSTR = fs.readFileSync(path.relative(process.cwd(), instance.cssFile()));
   else cssSTR = instance.css();
   const templateIIFE = `(function(){
     var t=document.createElement('template');
