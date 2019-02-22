@@ -22,6 +22,7 @@ module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
       ${pageClasses}
 
       window.${indexPage.id} = new ${indexPage.className}();
+      window.currentPageClass = window.${indexPage.id};
       setTimeout(function () {
         ${indexPage.id}.connectedCallback();
       }, 0);

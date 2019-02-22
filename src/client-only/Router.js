@@ -33,13 +33,16 @@ module.exports = class Router {
   }
 
   changePage(className) {
+    // disconnect current page before rendering next one
+    if (window.currentPageClass.disconnectedCallback) window.currentPageClass.disconnectedCallback();
+
     const id = '$'+className;
     window[id] = eval('new ' + className + '()');
+    window.currentPageClass = window[id];
     window[id].render();
     const pageTitle = document.querySelector('title');
     if (pageTitle) pageTitle.innerText = window[id].title;
     setTimeout(() => {
-      if (window[id].disconnectedCallback) window[id].disconnectedCallback();
       if (window[id].connectedCallback) window[id].connectedCallback();
     }, 0);
   }
