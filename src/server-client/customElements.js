@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const HTMLElement = require('./HTMLElement')
-const { html } = require('common-tags');
+const { html, stripIndents } = require('common-tags');
 const cssStr = html;
 const components = {};
 

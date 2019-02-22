@@ -30,7 +30,7 @@ function build(instance) {
   return {
     className: className,
     id: `$${className}`,
-    pageTitle: instance.title,
+    title: instance.title,
     classStr: instance.constructor.toString(),
     template
   };

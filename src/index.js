@@ -6,7 +6,8 @@ const PageMapper = require('./server-client/PageMapper');
 const Page = require('./server-client/Page');
 const buildClient = require('./client-only/build');
 const buildPage = require('./server-only/buildPage');
-const { html } = require('common-tags');
+const { html, stripIndents } = require('common-tags');
+const escapeHTML = html => html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
 module.exports = {
   HTMLElementExtended,
@@ -15,7 +16,9 @@ module.exports = {
   Page,
   buildClient,
   html,
+  stripIndents,
   cssStr: html,
+  escapeHTML,
   setConfig: set,
   fileHandler,
   buildPage

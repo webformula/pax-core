@@ -12,8 +12,30 @@ const clienTags = `
     }
     return finalString;
   };
+  window.stripIndents = function (strings, ...expressionValues) {
+    let finalString = '';
+    let i = 0;
+    let length = strings.length;
+    for(; i < length; i++) {
+      if (i > 0) finalString += expressionValues[i - 1];
+      finalString += strings[i];
+    }
+    const match = finalString.match(/^[^\\S\\n]*(?=\\S)/gm);
+    const indent = match && Math.min(...match.map(el => el.length));
+    if (indent) {
+      const regexp2 = new RegExp('^.{'+indent+'}', 'gm');
+      return finalString.replace(regexp2, '');
+    }
+    return finalString;
+  };
+  window.escapeHTML = function (html) {
+    return html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  };
   window.htmlSafe = window.html;
   window.cssStr = window.html;
+  window.stripIndent = window.html;
+  window.oneLine = window.html;
+  window.oneLineTrim = window.html;
 `;
 
 exports.client = (pageMapper) => {

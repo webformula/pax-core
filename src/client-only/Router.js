@@ -20,8 +20,9 @@ module.exports = class Router {
     const path = this.path();
     const match = this.match(path);
 
-    if (match === false && this._notFountRoute) {
-      return this.changePage(this._notFountRoute);
+    if (match === false) {
+      if (this._notFountRoute) return this.changePage(this._notFountRoute);
+      else return console.warn('no page found and no default not found page setup');
     }
 
     let url = path;
@@ -32,8 +33,15 @@ module.exports = class Router {
   }
 
   changePage(className) {
-    window['$'+className] = eval('new ' + className + '()');
-    window['$'+className].render();
+    const id = '$'+className;
+    window[id] = eval('new ' + className + '()');
+    window[id].render();
+    const pageTitle = document.querySelector('title');
+    if (pageTitle) pageTitle.innerText = window[id].title;
+    setTimeout(() => {
+      if (window[id].disconnectedCallback) window[id].disconnectedCallback();
+      if (window[id].connectedCallback) window[id].connectedCallback();
+    }, 0);
   }
 
   path() {
@@ -54,6 +62,25 @@ module.exports = class Router {
 
   extractGETParameters(url) {
     return url.split(/\?(.*)?$/).slice(1).join('');
+  }
+
+  getParameters() {
+    return this.extractGETParameters(this.getCurrent()).split(',').filter(a => !!a).reduce((a, b) => {
+      const split = b.split('=');
+      a[split[0]] = split[1];
+      return a;
+    }, {});
+  }
+
+  getParameter(name) {
+    return this.getParameters()[name];
+  }
+
+  addParameter(name, value) {
+    const url = this.getCurrent();
+    const parameters = this.getParameters();
+    parameters[name] = value;
+    window.location.href = window.location.href.split('?')[0] + '?' + Object.keys(parameters).map(key => `${key}=${parameters[key]}`).join(',');
   }
 
   match(url) {
