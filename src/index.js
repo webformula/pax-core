@@ -17,7 +17,7 @@ module.exports = {
   buildClient,
   html,
   stripIndents,
-  cssStr: html,
+  css: html,
   escapeHTML,
   setConfig: set,
   fileHandler,

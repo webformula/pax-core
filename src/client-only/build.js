@@ -31,7 +31,7 @@ module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
 
   const headStyle = html`
     <style>
-      ${customElements.getStaticExternalCSS()}
+      ${customElements.getStaticExternalStyle()}
     </style>
   `;
 

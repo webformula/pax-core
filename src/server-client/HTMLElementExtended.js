@@ -18,8 +18,8 @@ module.exports = class HTMLElementExtended {
 
   cloneTemplate() {}
   render() {}
-  externalCSS() { return ''; }
-  css() { return ''; }
+  externalStyles() { return ''; }
+  styles() { return ''; }
   template() { return ''; }
 };
 

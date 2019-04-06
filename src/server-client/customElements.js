@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const HTMLElement = require('./HTMLElement')
 const { html, stripIndents } = require('common-tags');
-const cssStr = html;
+const css = html;
 const components = {};
 
 module.exports = {
@@ -13,12 +13,12 @@ module.exports = {
     components[name] = constructor;
   },
 
-  getStaticExternalCSS() {
+  getStaticExternalStyle() {
     // if (this.memoize) {
-    //   if (!this.getStaticExternalCSSMemoized) this.getStaticExternalCSSMemoized = memoize(_getStaticExternalCSS);
-    //   return this.getStaticExternalCSSMemoized();
+    //   if (!this.getStaticExternalStyleMemoized) this.getStaticExternalStyleMemoized = memoize(_getStaticExternalStyle);
+    //   return this.getStaticExternalStyleMemoized();
     // }
-    return _getStaticExternalCSS();
+    return _getStaticExternalStyle();
   },
 
   getStaticFile() {
@@ -30,10 +30,10 @@ module.exports = {
   }
 };
 
-function _getStaticExternalCSS() {
+function _getStaticExternalStyle() {
   return Object
     .keys(components)
-    .map(key => new components[key]().externalCSS())
+    .map(key => new components[key]().externalStyles())
     .join('\n');
 }
 
@@ -52,15 +52,15 @@ function buildComponentScript(name, _class) {
   const { partial, full } = buildHTMLElementExtended(name, _class.toString());
   const instance = eval('new '+partial);
 
-  let cssSTR = '';
-  if (instance.cssFile) cssSTR = fs.readFileSync(path.relative(process.cwd(), instance.cssFile()));
-  else cssSTR = instance.css();
+  let styleString = '';
+  if (instance.stylesFile) styleString = fs.readFileSync(path.relative(process.cwd(), instance.stylesFile()));
+  else styleString = instance.styles();
   const templateIIFE = `(function(){
     var t=document.createElement('template');
     t.setAttribute('id','${name}');
     t.innerHTML=\`
     <style>
-      ${cssSTR}
+      ${styleString}
     </style>
     <render-block>
       ${instance.template()}
@@ -79,14 +79,14 @@ function buildHTMLElementExtended(name, content) {
   const classContent = getClassContent(content);
   let { preConstructor, constructor, postConstructor } = splitOnConstructor(classContent)
   // constructor = addLineToConstructor(constructor, `this.setAttribute('id', '$${id}');`);
-  const hasCSS = content.includes('css()'); // TODO use regex to allow for space
+  const hasStyles = content.includes('styles()'); // TODO use regex to allow for space
   const hasTemplate = content.includes('template()'); // TODO use regex to allow for space
   const modifiedContent = `
     ${preConstructor}
     ${constructor}
     ${postConstructor}
 
-    ${hasCSS ? '' : 'css() { return ""; }'}
+    ${hasStyles ? '' : 'styles() { return ""; }'}
     ${hasTemplate ? '' : 'template() { return ""; }'}
   `;
 

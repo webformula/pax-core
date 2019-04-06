@@ -32,7 +32,7 @@ const clienTags = `
     return html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   };
   window.htmlSafe = window.html;
-  window.cssStr = window.html;
+  window.css = window.html;
   window.stripIndent = window.html;
   window.oneLine = window.html;
   window.oneLineTrim = window.html;
