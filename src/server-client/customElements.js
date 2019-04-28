@@ -103,9 +103,11 @@ function buildHTMLElementExtended(name, content) {
         ${modifiedContent}
 
         render() {
+          if (this.beforeRender) this.beforeRender();
           const renderBlock = this.shadowRoot.querySelector('render-block');
           if (!renderBlock) throw Error('Could not find <render-block>');
           renderBlock.innerHTML = this.template();
+          if (this.afterRender) this.afterRender();
         }
 
         cloneTemplate(rerender = false) {

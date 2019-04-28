@@ -8,6 +8,7 @@ const buildClient = require('./client-only/build');
 const buildPage = require('./server-only/buildPage');
 const { html, stripIndents } = require('common-tags');
 const escapeHTML = html => html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const global = require('./server-client/global');
 
 module.exports = {
   HTMLElementExtended,
@@ -21,5 +22,6 @@ module.exports = {
   escapeHTML,
   setConfig: set,
   fileHandler,
-  buildPage
+  buildPage,
+  global
 };

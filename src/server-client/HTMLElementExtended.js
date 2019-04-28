@@ -17,7 +17,9 @@ module.exports = class HTMLElementExtended {
   setAttribute() {}
 
   cloneTemplate() {}
+  beforeRender() {}
   render() {}
+  afterRender() {}
   externalStyles() { return ''; }
   styles() { return ''; }
   template() { return ''; }

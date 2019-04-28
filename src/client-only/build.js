@@ -3,6 +3,7 @@ const fs = require('fs');
 const pageBuilder = require('../server-client/pageBuilder');
 const buildMainScript = require('../server-client/buildMainScript');
 const customElements = require('../server-client/customElements');
+const global = require('../server-client/global');
 
 // TODO can we make the pageMapper optional?
 
@@ -16,6 +17,8 @@ module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
   const headScript = html`
     <script>
       ${mainScript}
+
+      ${global.buildClient_()}
 
       ${customElements.getStaticFile()}
 
