@@ -46,4 +46,7 @@ module.exports = class HTMLElement {
 class ShadowRoot {
   innerHTML() {}
   appendChild() {}
+  querySelector(selector) {
+    if (selector === 'render-block') return {};
+  }
 }
