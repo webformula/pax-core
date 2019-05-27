@@ -1,6 +1,6 @@
 {
   "name": "@webformula/pax-core",
-  "version": "0.2.2-beta",
+  "version": "0.2.0-beta",
   "description": "PAX pages and components tool set. Build, render, and serve web-pages and web-components",
   "main": "index.js",
   "scripts": {
