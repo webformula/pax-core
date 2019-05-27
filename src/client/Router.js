@@ -3,6 +3,7 @@ module.exports = class Router {
     this.routes = routes;
     if (this.routes['/404']) this._notFountRoute = this.routes['/404'];
 
+    // regexes for parsing uri's
     this.PARAMETER_REGEXP = /([:*])(\w+)/g;
     this.WILDCARD_REGEXP = /\*/g;
     this.REPLACE_VARIABLE_REGEXP = '([^\/]+)';
@@ -10,43 +11,14 @@ module.exports = class Router {
     this.FOLLOWED_BY_SLASH_REGEXP = '(?:\/$|$)';
     this.MATCH_REGEXP_FLAGS = '';
 
-    window.addEventListener('hashchange', this.resolve.bind(this));
+    // browser events for url changes
+    window.addEventListener('hashchange', this._resolve.bind(this));
     window.addEventListener('DOMContentLoaded', () => {
-      this.resolve();
+      this._resolve();
     });
   }
 
-  resolve() {
-    const path = this.path();
-    const match = this.match(path);
-
-    if (match === false) {
-      if (this._notFountRoute) return this.changePage(this._notFountRoute);
-      else return console.warn('no page found and no default not found page setup');
-    }
-
-    let url = path;
-    let GETParameters = this.extractGETParameters(this.getCurrent());
-    if (GETParameters) url += `?${GETParameters}`;
-    window.location.hash = url;
-    return this.changePage(match.className);
-  }
-
-  changePage(className) {
-    // disconnect current page before rendering next one
-    if (window.currentPageClass.disconnectedCallback) window.currentPageClass.disconnectedCallback();
-
-    const id = '$'+className;
-    window[id] = eval('new ' + className + '()');
-    window.currentPageClass = window[id];
-    window[id].render();
-    const pageTitle = document.querySelector('title');
-    if (pageTitle) pageTitle.innerText = window[id].title;
-    setTimeout(() => {
-      if (window[id].connectedCallback) window[id].connectedCallback();
-    }, 0);
-  }
-
+  // uri path
   path() {
     let path = window.location.hash.replace(/.*#/, '');
     if (path.includes('?')) path = path.split('?')[0];
@@ -55,20 +27,11 @@ module.exports = class Router {
   }
 
   getCurrent() {
-    return this.clean(window.location.href);
-  }
-
-  clean(str) {
-    if (str instanceof RegExp) return s;
-    return str.replace(/\/+$/, '').replace(/^\/+/, '/');
-  }
-
-  extractGETParameters(url) {
-    return url.split(/\?(.*)?$/).slice(1).join('');
+    return this._clean(window.location.href);
   }
 
   getParameters() {
-    return this.extractGETParameters(this.getCurrent()).split(',').filter(a => !!a).reduce((a, b) => {
+    return this._extractGETParameters(this.getCurrent()).split(',').filter(a => !!a).reduce((a, b) => {
       const split = b.split('=');
       a[split[0]] = split[1];
       return a;
@@ -86,8 +49,50 @@ module.exports = class Router {
     window.location.href = window.location.href.split('?')[0] + '?' + Object.keys(parameters).map(key => `${key}=${parameters[key]}`).join(',');
   }
 
-  match(url) {
-    let matched = this.findMatchedRoutes(url);
+  // resolve path and update page
+  _resolve() {
+    const path = this.path();
+    const match = this._match(path);
+
+    if (match === false) {
+      if (this._notFountRoute) return this._changePage(this._notFountRoute);
+      else return console.warn('no page found and no default not found page setup');
+    }
+
+    let url = path;
+    let GETParameters = this._extractGETParameters(this.getCurrent());
+    if (GETParameters) url += `?${GETParameters}`;
+    window.location.hash = url;
+    return this._changePage(match.className);
+  }
+
+  // change and render page
+  _changePage(className) {
+    // disconnect current page before rendering next one
+    window.currentPageClass.disconnectedCallback();
+
+    const id = '$'+className; // page var name ( $Name.somefunc() )
+    window[id] = eval('new ' + className + '()');
+    window.currentPageClass = window[id];
+    window[id].render();
+    const pageTitle = document.querySelector('title');
+    if (pageTitle) pageTitle.innerText = window[id].title;
+    setTimeout(() => {
+      if (window[id].connectedCallback) window[id].connectedCallback();
+    }, 0);
+  }
+
+  _clean(str) {
+    if (str instanceof RegExp) return s;
+    return str.replace(/\/+$/, '').replace(/^\/+/, '/');
+  }
+
+  _extractGETParameters(url) {
+    return url.split(/\?(.*)?$/).slice(1).join('');
+  }
+
+  _match(url) {
+    let matched = this._findMatchedRoutes(url);
     if (!matched.length) return false;
     else if (matched.length === 1) return matched[0];
     else {
@@ -98,12 +103,12 @@ module.exports = class Router {
     }
   }
 
-  findMatchedRoutes(url) {
+  _findMatchedRoutes(url) {
     return Object.keys(this.routes)
       .map(route => {
-        var { regexp, paramNames } = this.replaceDynamicURLParts(this.clean(route));
+        var { regexp, paramNames } = this._replaceDynamicURLParts(this._clean(route));
         var match = url.replace(/^\/+/, '/').match(regexp);
-        var params = this.regExpResultToParams(match, paramNames);
+        var params = this._regExpResultToParams(match, paramNames);
         return !match ? false : {
           match,
           route,
@@ -114,7 +119,7 @@ module.exports = class Router {
       .filter(m => m && m.match[0] !== '');
   }
 
-  replaceDynamicURLParts(route) {
+  _replaceDynamicURLParts(route) {
     let paramNames = [];
     let regexp = '';
 
@@ -122,7 +127,7 @@ module.exports = class Router {
       regexp = route;
     } else {
       regexp = new RegExp(
-        this.clean(route)
+        this._clean(route)
           .replace(this.PARAMETER_REGEXP, (full, dots, name) => {
             paramNames.push(name);
             return this.REPLACE_VARIABLE_REGEXP;
@@ -133,7 +138,7 @@ module.exports = class Router {
     return { regexp, paramNames };
   }
 
-  regExpResultToParams(match, names) {
+  _regExpResultToParams(match, names) {
     if (names.length === 0) return null;
     if (!match) return null;
     return match
@@ -144,4 +149,4 @@ module.exports = class Router {
         return params;
       }, null);
   }
-}
+};

@@ -1,6 +1,6 @@
 const path = require('path');
 const glob = require('glob');
-const Page = require('./Page');
+const Page = require('./Page.js');
 
 const resolverFileGlob = '**/*.js';
 const CWD = process.cwd();
@@ -26,15 +26,17 @@ module.exports = class PageMapper {
     }, {});
   }
 
-  findPage(url) {
-    if (url && url[0] !== '/') url = '/' + url;
-    if (this._root && url === '/') return this._root;
-    const module = this.modules[url.replace(slash_REG, '')];
+  // Find page based on uri: (folder/filenameWithoutExtension)
+  findPage(uri) {
+    if (uri && uri[0] !== '/') uri = '/' + uri;
+    if (this._root && uri === '/') return this._root;
+    const module = this.modules[uri.replace(slash_REG, '')];
     // cannot find page class or page function
     if (!module || (!(module.prototype instanceof Page) && typeof module !== 'function')) return this._404 || noop;
     return module;
   }
 
+  // get root
   getIndex() {
     return this._root;
   }
@@ -43,9 +45,17 @@ module.exports = class PageMapper {
     return this.routeMap;
   }
 
+  get pageNotFount() {
+    return this._404;
+  }
+
   set pageNotFount(url) {
     this._404 = this.findPage(url);
     this.routeMap['/404'] = this._getClassName(this._404);
+  }
+
+  get root() {
+    return this._root;
   }
 
   set root(url) {
@@ -58,6 +68,7 @@ module.exports = class PageMapper {
   }
 };
 
+// take a file path and strip it of extra slashed and extentions to turn it into a uri
 function convertToUrl(str, uri) {
   return str
     .replace(uri, '') // remove folder path

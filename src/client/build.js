@@ -1,14 +1,14 @@
 const { html } = require('common-tags');
 const fs = require('fs');
-const pageBuilder = require('../server-client/pageBuilder');
-const buildMainScript = require('../server-client/buildMainScript');
-const customElements = require('../server-client/customElements');
-const global = require('../server-client/global');
-
-// TODO can we make the pageMapper optional?
+const pageBuilder = require('../server_client/pageBuilder.js');
+const mainScriptBuilder = require('../server_client/mainScriptBuilder.js');
+const customElements = require('../server_client/customElements.js');
+const HTMLElementExtended = require('../server_client/HTMLElementExtended.js');
+const global = require('../server_client/global.js');
+const document = require('../server_client/document.js');
 
 module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
-  const mainScript = buildMainScript.client(pageMapper);
+  const mainScript = mainScriptBuilder.client(pageMapper);
   const indexPage = pageBuilder.client(pageMapper.getIndex());
   const pages = Object.keys(pageMapper.modules).map(uri => {
     return pageBuilder.client(pageMapper.modules[uri]);
@@ -16,14 +16,22 @@ module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
   const pageClasses = pages.map(p => p.classStr).join('\n\n');
   const headScript = html`
     <script>
+      // main util methods
       ${mainScript}
 
-      ${global.buildClient_()}
+      // global classes
+      ${global._buildClient()}
 
+      // Use this in place of HTMLElement to get the advanced features
+      ${HTMLElementExtended.toString()}
+
+      // customElemnts
       ${customElements.getStaticFile()}
 
+      // Pages
       ${pageClasses}
 
+      // build initial page
       window.${indexPage.id} = new ${indexPage.className}();
       window.currentPageClass = window.${indexPage.id};
       setTimeout(function () {
@@ -42,8 +50,10 @@ module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
   if (layout) {
     pageLayout = layout({
       head: html`
+        <!-- --- Scripts --- -->
         ${headScript}
 
+        <!-- --- Styles --- -->
         ${headStyle}
       `,
       title: indexPage.title,
@@ -51,7 +61,7 @@ module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
     });
   } else if (indexHTML) {
     const splitHTML = indexHTML.split('</head>');
-    pageLayout = [splitHTML[0], headScript, headStyle, '</head>', splitHTML[1]].join('\n');
+    pageLayout = [splitHTML[0], headScript, '</head>', splitHTML[1]].join('\n');
   } else {
     throw Error('Either `layout` or `indexHTML` is required');
   }

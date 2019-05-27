@@ -14,14 +14,14 @@ Object.defineProperties(globals, {
     enumerable: false
   },
 
-  buildClient_: {
+  _buildClient: {
     value: buildClient,
     writable: false,
     configurable: false,
     enumerable: false
   },
 
-  buildServer_: {
+  _buildServer: {
     value: buildServer,
     writable: false,
     configurable: false,
