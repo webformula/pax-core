@@ -1,10 +1,10 @@
-const pageBuilder = require('../server-client/pageBuilder');
+const pageBuilder = require('../server_client/pageBuilder.js');
 
 // This build page is provided externally for the user
 module.exports = async (page) => {
   const built = await pageBuilder.server(page);
   return {
-    title: built.pageTitle,
+    title: built.title,
     head: `
 <script>
 ${built.classStr}

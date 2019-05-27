@@ -1,5 +1,5 @@
 const { html } = require('common-tags');
-const Page = require('./Page');
+const Page = require('./Page.js');
 
 exports.client = (page) => {
   // handle custom page functions

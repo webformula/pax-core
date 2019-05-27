@@ -1,4 +1,4 @@
-const config = require('./config');
+const { getConfig } = require('./config.js');
 
 const register = `
 if ('serviceWorker' in navigator) {
@@ -24,4 +24,4 @@ if ('serviceWorker' in navigator) {
 }
 `;
 
-module.exports = () => config.get('serviceWorker') ? register : unregister;
+module.exports = () => getConfig('serviceWorker') ? register : unregister;

@@ -28,7 +28,6 @@ module.exports = () => `
     );
   });
 
-
   self.addEventListener('fetch', function (event) {
     event.respondWith(
       caches.open(_cacheName).then(function (cache) {
