@@ -26,6 +26,13 @@ Object.defineProperties(globals, {
     writable: false,
     configurable: false,
     enumerable: false
+  },
+
+  _getGlobals: {
+    value: getGlobals,
+    writable: false,
+    configurable: false,
+    enumerable: false
   }
 });
 
@@ -56,7 +63,14 @@ function buildClient() {
 
 // Do i need this, since the user will just require it?
 function buildServer() {
+  return Object.keys(globals).forEach(name => {
+    globals
+    return `${str}\nwindow.${name} = ${globals[name].toString()}`
+  });
+}
 
+function getGlobals() {
+  return globals;
 }
 
 module.exports = globals;

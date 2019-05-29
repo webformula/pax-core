@@ -5,6 +5,7 @@ const HTMLElementExtended = require('./HTMLElementExtended.js')
 const { html, stripIndents } = require('common-tags');
 const css = html;
 const components = {};
+const { _getGlobals } = require('./global.js');
 
 module.exports = {
   define(name, constructor) {
@@ -43,6 +44,12 @@ function _getStaticFile() {
 }
 
 function buildComponentScript(name, _class) {
+  // mkae globals available during build
+  const gbs = _getGlobals();
+  Object.keys(gbs).forEach(k => {
+    this[k] = gbs[k];
+  });
+
   const instance = eval('new '+_class);
   let styleString = '';
   if (instance.stylesFile) styleString = fs.readFileSync(path.relative(process.cwd(), instance.stylesFile()));
