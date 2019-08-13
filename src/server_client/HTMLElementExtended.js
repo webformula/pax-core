@@ -1,5 +1,6 @@
 const HTMLElement = require('./HTMLElement.js');
 const document = require('./document.js');
+const window = require('./window.js');
 
 
 module.exports = class HTMLElementExtended extends HTMLElement {
@@ -21,11 +22,13 @@ module.exports = class HTMLElementExtended extends HTMLElement {
   }
 
   render() {
+    if (this.removeEvents) this.removeEvents();
     if (this.beforeRender) this.beforeRender();
     const renderBlock = this.shadowRoot.querySelector('render-block');
     if (!renderBlock) throw Error('Could not find <render-block>');
     renderBlock.innerHTML = this.template();
     if (this.afterRender) this.afterRender();
+    if (this.addEvents) this.addEvents();
   }
 
   // Called before render(). placeholder, can be overidden
@@ -34,6 +37,13 @@ module.exports = class HTMLElementExtended extends HTMLElement {
   // Called after render(). placeholder, can be overidden
   // This does not include the initial cloneNode
   afterRender() {}
+
+  // this is called when the component is connected
+  // This is also called after render, events are first remoed before render so you dont have multiple events
+  addEvents() {}
+  // this is called when the component is disconnected
+  // This is also called prior to render, after render addEvents is called. This will make sure you old elements dont retain events
+  removeEvents() {}
 
   // add css that will be injected to the template
   styles() {}

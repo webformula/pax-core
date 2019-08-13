@@ -13,4 +13,8 @@ module.exports = new class document {
       }
     };
   }
+
+  querySelector() {
+    return {};
+  }
 };

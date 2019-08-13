@@ -14,7 +14,7 @@ module.exports = class Router {
     // browser events for url changes
     window.addEventListener('hashchange', this._resolve.bind(this));
     window.addEventListener('DOMContentLoaded', () => {
-      this._resolve();
+      this._resolve(true);
     });
   }
 
@@ -50,7 +50,7 @@ module.exports = class Router {
   }
 
   // resolve path and update page
-  _resolve() {
+  _resolve(initial = false) {
     const path = this.path();
     const match = this._match(path);
 
@@ -63,6 +63,9 @@ module.exports = class Router {
     let GETParameters = this._extractGETParameters(this.getCurrent());
     if (GETParameters) url += `?${GETParameters}`;
     window.location.hash = url;
+
+    // prevent page from loading home on initial render
+    if (initial && url === '/') return;
     return this._changePage(match.className);
   }
 
@@ -75,6 +78,8 @@ module.exports = class Router {
     window[id] = eval('new ' + className + '()');
     window.currentPageClass = window[id];
     window[id].render();
+    const renderBlock = document.querySelector('render-block-page');
+    renderBlock.parentNode.scrollTop = 0;
     const pageTitle = document.querySelector('title');
     if (pageTitle) pageTitle.innerText = window[id].title;
     setTimeout(() => {

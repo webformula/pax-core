@@ -6,6 +6,8 @@ const { html, stripIndents } = require('common-tags');
 const css = html;
 const components = {};
 const { _getGlobals } = require('./global.js');
+const window = require('./window.js');
+const document = require('./document.js');
 
 module.exports = {
   define(name, constructor) {
@@ -46,6 +48,8 @@ function _getStaticFile() {
 function buildComponentScript(name, _class) {
   // mkae globals available during build
   const gbs = _getGlobals();
+  this.window = window;
+  this.document = document;
   Object.keys(gbs).forEach(k => {
     this[k] = gbs[k];
   });

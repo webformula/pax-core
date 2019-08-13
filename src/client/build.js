@@ -6,6 +6,7 @@ const customElements = require('../server_client/customElements.js');
 const HTMLElementExtended = require('../server_client/HTMLElementExtended.js');
 const global = require('../server_client/global.js');
 const document = require('../server_client/document.js');
+const window = require('../server_client/window.js');
 
 module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
   const mainScript = mainScriptBuilder.client(pageMapper);
