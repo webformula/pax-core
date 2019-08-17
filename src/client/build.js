@@ -57,7 +57,7 @@ module.exports = ({ pageMapper, layout, indexHTML, path = 'dist' }) => {
         <!-- --- Styles --- -->
         ${headStyle}
       `,
-      title: indexPage.title,
+      title: `<span class="pax-core-title-inject">${indexPage.title}</span>`,
       body: indexPage.template
     });
   } else if (indexHTML) {
