@@ -1,3 +1,5 @@
+const Page = require('../server_client/Page.js');
+
 module.exports = class Router {
   constructor(routes) {
     this.routes = routes;
@@ -73,10 +75,12 @@ module.exports = class Router {
   _changePage(className) {
     // disconnect current page before rendering next one
     window.currentPageClass.disconnectedCallback();
+    window.currentPageClass._disableRender = true;
 
     const id = '$'+className; // page var name ( $Name.somefunc() )
     window[id] = eval('new ' + className + '()');
     window.currentPageClass = window[id];
+    window.currentPageClass._disableRender = false;
     window[id].render();
     const renderBlock = document.querySelector('render-block-page');
     renderBlock.parentNode.scrollTop = 0;

@@ -8,6 +8,7 @@ module.exports = class Page {
 
   // render page html
   render() {
+    if (this._disableRender === true) return;
     if (this.beforeRender) this.beforeRender();
     const renderBlock = document.querySelector('render-block-page');
     if (!renderBlock) throw Error('Could not find <render-block-page>');
