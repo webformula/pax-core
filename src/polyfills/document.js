@@ -1,5 +1,5 @@
 // dummmy document object to make builds work correctly
-module.exports = new class document {
+export default new class document {
   getElementById(id) {
     if (id.indexOf('--template') > 1) return {
       content: {
@@ -18,3 +18,5 @@ module.exports = new class document {
     return {};
   }
 };
+
+global.document = document;

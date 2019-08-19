@@ -1,5 +1,5 @@
 // dummmy document object to make builds work correctly
-module.exports = new class window {
+export default new class window {
   get localStorage() {
     return {
       getItem() {},
@@ -7,3 +7,5 @@ module.exports = new class window {
     };
   }
 };
+
+global.window = window;

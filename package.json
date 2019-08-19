@@ -1,8 +1,9 @@
 {
   "name": "@webformula/pax-core",
-  "version": "0.2.5-beta",
+  "version": "0.4.0-beta2",
   "description": "PAX pages and components tool set. Build, render, and serve web-pages and web-components",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js",
     "watch": "nodemon index.js",

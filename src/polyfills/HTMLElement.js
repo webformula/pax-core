@@ -2,7 +2,7 @@
  *   - Used for serverside rendering
  *   - Used for build steps
  */
-module.exports = class HTMLElement {
+export default class HTMLElement {
   constructor() {
     this.style = {};
   }
@@ -50,3 +50,6 @@ class ShadowRoot {
     if (selector === 'render-block') return {};
   }
 }
+
+// make it global so we do not need to import it into files and cause problems with the browser
+global.HTMLElement = HTMLElement;

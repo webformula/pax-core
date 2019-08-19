@@ -1,9 +1,6 @@
-const Page = require('../server_client/Page.js');
-
-module.exports = class Router {
-  constructor(routes) {
-    this.routes = routes;
-    if (this.routes['/404']) this._notFountRoute = this.routes['/404'];
+export default class Router {
+  constructor() {
+    this.routes = {};
 
     // regexes for parsing uri's
     this.PARAMETER_REGEXP = /([:*])(\w+)/g;
@@ -12,7 +9,9 @@ module.exports = class Router {
     this.REPLACE_WILDCARD = '(?:.*)';
     this.FOLLOWED_BY_SLASH_REGEXP = '(?:\/$|$)';
     this.MATCH_REGEXP_FLAGS = '';
+  }
 
+  init() {
     // browser events for url changes
     window.addEventListener('hashchange', this._resolve.bind(this));
     window.addEventListener('DOMContentLoaded', () => {
@@ -20,20 +19,33 @@ module.exports = class Router {
     });
   }
 
-  // uri path
-  path() {
+  add(path, pageLocation) {
+    if (this.routes[path]) throw Error(`Path already exists: ${path}`);
+    this.routes[path] = pageLocation;
+  }
+
+  setRoot(pageLocation) {
+    if (this.routes['/']) throw Error('Path already exists: /');
+    this.routes['/'] = pageLocation;
+  }
+
+  set404(pageLocation) {
+    this._notFountRoute = pageLocation;
+  }
+
+  get path() {
     let path = window.location.hash.replace(/.*#/, '');
     if (path.includes('?')) path = path.split('?')[0];
-    if (path.charAt(0) !== '/') { path = '/'+path; }
+    if (path.charAt(0) !== '/') path = '/'+path;
     return path;
   }
 
-  getCurrent() {
+  get current() {
     return this._clean(window.location.href);
   }
 
   getParameters() {
-    return this._extractGETParameters(this.getCurrent()).split(',').filter(a => !!a).reduce((a, b) => {
+    return this._extractGETParameters(this.current).split(',').filter(a => !!a).reduce((a, b) => {
       const split = b.split('=');
       a[split[0]] = split[1];
       return a;
@@ -45,15 +57,17 @@ module.exports = class Router {
   }
 
   addParameter(name, value) {
-    const url = this.getCurrent();
     const parameters = this.getParameters();
     parameters[name] = value;
     window.location.href = window.location.href.split('?')[0] + '?' + Object.keys(parameters).map(key => `${key}=${parameters[key]}`).join(',');
   }
 
+
+  // --- private ---
+
   // resolve path and update page
   _resolve(initial = false) {
-    const path = this.path();
+    const path = this.path;
     const match = this._match(path);
 
     if (match === false) {
@@ -62,7 +76,7 @@ module.exports = class Router {
     }
 
     let url = path;
-    let GETParameters = this._extractGETParameters(this.getCurrent());
+    let GETParameters = this._extractGETParameters(this.current);
     if (GETParameters) url += `?${GETParameters}`;
     window.location.hash = url;
 
@@ -158,4 +172,4 @@ module.exports = class Router {
         return params;
       }, null);
   }
-};
+}
