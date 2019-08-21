@@ -6,8 +6,6 @@ import tags from 'common-tags';
 import customElements from './polyfills/customElements.js';
 import HTMLElementExtended from './HTMLElementExtended.js';
 import document from './polyfills/document.js';
-// import tags from 'common-tags';
-
 
 const { html } = tags;
 const readFileAsync = promisify(fs.readFile);
@@ -19,23 +17,21 @@ const regex = /customElements\.define\(('|")(.*)('|")/;
 global.HTMLElementExtended = HTMLElementExtended;
 global.html = html;
 
-
+// Package all the components ainto a singele file
+// This will make it easier to serve and package
 export default async function ({ rootFolder, distFolder = 'dist' }) {
   const jsfiles = glob.sync(path.join(rootFolder, '**/*.js')) || [];
-  const cssfiles = glob.sync(path.join(rootFolder, '**/*.css')) || [];
   const categorized = await categorizeFiles(jsfiles);
 
   // build components js
   const components = await buildComponents(categorized.filter(d => d.isComponent));
   const file = makeFile(components);
 
-  // build css
-  const cssStr = await buildCSS(cssfiles, components.filter(d => d.stylesFile !== undefined).map(d => d.stylesFile.replace(/^\/+/, '')));
   await checkDirs({ distFolder });
-  await Promise.all([
-    writeFileAsync(`./${distFolder}/components.js`, file),
-    writeFileAsync(`./${distFolder}/components.css`, cssStr)
-  ]);
+  await writeFileAsync(`./${distFolder}/components.js`, file);
+  return {
+    insternalCSSFiles: components.filter(d => d.stylesFile !== undefined).map(d => d.stylesFile)
+  };
 }
 
 function categorizeFiles(filePaths) {
@@ -59,15 +55,6 @@ function categorizeFiles(filePaths) {
       fileStr
     };
   }));
-}
-
-async function buildCSS(files, styleFiles) {
-  const cwd = process.cwd();
-  const arr = await Promise.all(files.filter(filePath => !styleFiles.includes(filePath)).map(async filePath => {
-    const file = await readFileAsync(path.join(cwd, filePath));
-    return file.toString();
-  }));
-  return arr.join('\n');
 }
 
 async function buildComponents(componentsInfo) {
