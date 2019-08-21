@@ -1,5 +1,5 @@
 // dummmy document object to make builds work correctly
-export default new class document {
+const document = new class {
   getElementById(id) {
     if (id.indexOf('--template') > 1) return {
       content: {
@@ -20,3 +20,5 @@ export default new class document {
 };
 
 global.document = document;
+
+export default document

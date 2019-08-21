@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { promisify, inspect } from 'util';
+import { promisify } from 'util';
 import glob from 'glob';
 import tags from 'common-tags';
 import defaultLayout from './defaultLayout.js';
