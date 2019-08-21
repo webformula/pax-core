@@ -24,7 +24,7 @@ export default async function ({ rootFolder, pagesFolder = 'pages', distFolder, 
 
 function buildHead({ routeConfig, pages, pagesFolder }) {
   return html`
-    <script type="module" src="pax-core/index.js"></script>
+    <script type="module" src="@webformula/pax-core/index.js"></script>
 
     <script type="module">
       ${pages.map(pagePath => {
@@ -37,7 +37,8 @@ function buildHead({ routeConfig, pages, pagesFolder }) {
       }).join('\n')}
     </script>
 
-    <script type="module" src="pax-core/client.js"></script>
+    <script type="module" src="@webformula/pax-core/client.js"></script>
+    <script type="module" src="component-templates.js"></script>
 
     <!-- create globally accessable instance of page class -->
     <script type="module">

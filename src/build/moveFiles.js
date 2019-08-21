@@ -67,28 +67,28 @@ async function evaluteImports(sourcePath, rootFolder, distFolder, dependencies) 
   const file = await readFileAsync(sourcePath);
   let fileStr = file.toString();
   const imports = extractImports(fileStr);
-  //
-  // // make paths relitive for pax-core
-  // imports.forEach(item => {
-  //   if (item.path === '@webformula/pax-core') {
-  //     item.browserPath = localizeImportPath(distFolder, `${pacCoreFolder}/index.js`);
-  //     // replace import with browser relitive path
-  //     const newImport = item.full.replace(item.path, item.browserPath);
-  //     fileStr = fileStr.replace(item.full, newImport);
-  //   }
-  //
-  //   // temporary fix for global browser dependencies
-  //   // This assumes the user will import the dependcy using a script tag
-  //   else if (dependencies[item.path] !== undefined) {
-  //     fileStr = fileStr.replace(item.full, `// ${item.full} // browser dependencies are global and do not need imports`);
-  //   }
-  // });
+
+  // make paths relitive for pax-core
+  imports.forEach(item => {
+    if (item.path === '@webformula/pax-core') {
+      item.browserPath = '/@webformula/pax-core/index.js';
+      // replace import with browser relitive path
+      const newImport = item.full.replace(item.path, item.browserPath);
+      fileStr = fileStr.replace(item.full, newImport);
+    }
+
+    // temporary fix for global browser dependencies
+    // This assumes the user will import the dependcy using a script tag
+    else if (dependencies[item.path] !== undefined) {
+      fileStr = fileStr.replace(item.full, `// ${item.full} // browser dependencies are global and do not need imports`);
+    }
+  });
 
   return {
     sourcePath,
     distPath: sourcePath.replace(rootFolder, distFolder),
     imports,
-    // fileStr
+    fileStr
   };
 }
 
@@ -99,16 +99,9 @@ function removeFileFromPath(filePath) {
 }
 
 function extractImports(str) {
-  // console.log([...str.matchAll(patternImport)]);
   return [...str.matchAll(patternImport)].map(v => ({
     full: v[0],
     importNames: !v[1] ? '' : v[1].replace('{', '').replace('}', '').replace(/\r?\n|\r/g, '').trim().split(','),
     path: v[2]
   }));
 }
-//
-// function localizeImportPath(destPath, replaceWith) {
-//   const nestLevel = destPath.split('/').length;
-//   const dirModifier = `./${[...new Array(nestLevel)].map(() => '../').join('')}`;
-//   return `${dirModifier}${replaceWith}`;
-// }

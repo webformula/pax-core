@@ -3,7 +3,7 @@ import path from 'path';
 import { promisify } from 'util';
 import glob from 'glob';
 import tags from 'common-tags';
-import defaultLayout from './defaultLayout.js';
+import defaultLayout from './build/defaultLayout.js';
 
 const { html } = tags;
 const existsAsync = promisify(fs.exists);

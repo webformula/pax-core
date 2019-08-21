@@ -19,7 +19,7 @@ export default async function ({ rootFolder, distFolder }) {
   const srcFiles = glob.sync(path.join(rootFolder, '**/*.js')) || [];
   const componentFiles = await getComponentFiles(srcFiles);
   const templates = await getTemplates(componentFiles);
-  console.log(makeFile(templates));
+  await writeFileAsync(path.join(distFolder, 'component-templates.js'), makeFile(templates));
 }
 
 function makeFile(components) {
