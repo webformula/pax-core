@@ -10,23 +10,23 @@ const mkdirAsync = promisify(fs.mkdir);
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
 
-export default async function ({ rootFolder, pagesFolder, distFolder = 'dist', layoutFilePath }) {
-  const srcFiles = await getFiles(rootFolder, distFolder, pagesFolder, layoutFilePath);
+export default async function ({ rootFolder, pagesFolder, distFolder = 'dist', layoutFilePath, customHTMLElementExtendedName }) {
+  const srcFiles = await getFiles(rootFolder, distFolder, pagesFolder, layoutFilePath, customHTMLElementExtendedName);
   await copysrcFiles(srcFiles);
 }
 
-async function getFiles(rootFolder, distFolder, pagesFolder, layoutFilePath) {
+async function getFiles(rootFolder, distFolder, pagesFolder, layoutFilePath, customHTMLElementExtendedName) {
   const packagejson = await readFileAsync('./package.json');
   const dependencies = JSON.parse(packagejson).dependencies;
-  const pagesPath = path.join(rootFolder, pagesFolder, '**/*.js');
+  const pagesPath = pagesFolder === undefined ? '' : path.join(rootFolder, pagesFolder, '**/*.js');
   const ignore = [pagesPath];
   if (layoutFilePath) ignore.push(layoutFilePath);
   const jsfiles = glob.sync(path.join(rootFolder, '**/*.js'), { ignore }) || [];
-  const potentialPageFiles = glob.sync(pagesPath) || [];
+  const potentialPageFiles = pagesPath === '' ? [] : glob.sync(pagesPath) || [];
   const pagefiles = await checkPageFiles(potentialPageFiles);
 
   const pagesFiles = await Promise.all(pagefiles.map(sourcePath => evaluteImports(sourcePath, rootFolder, distFolder, dependencies)));
-  const nonPagesFiles = await Promise.all(jsfiles.map(sourcePath => evaluteImports(sourcePath, rootFolder, distFolder, dependencies)));
+  const nonPagesFiles = await Promise.all(jsfiles.map(sourcePath => evaluteImports(sourcePath, rootFolder, distFolder, dependencies, customHTMLElementExtendedName)));
   const imports = [].concat(nonPagesFiles).concat(pagesFiles).reduce((a, b) => {
     b.imports.forEach(d => {
       const p = dependencies[d.path] !== undefined ? d.path : path.join(removeFileFromPath(b.sourcePath), d.path);
@@ -62,7 +62,7 @@ async function copysrcFiles(files) {
   }));
 }
 
-async function evaluteImports(sourcePath, rootFolder, distFolder, dependencies) {
+async function evaluteImports(sourcePath, rootFolder, distFolder, dependencies, customHTMLElementExtendedName) {
   const file = await readFileAsync(sourcePath);
   let fileStr = file.toString();
   const imports = extractImports(fileStr);
@@ -83,6 +83,10 @@ async function evaluteImports(sourcePath, rootFolder, distFolder, dependencies) 
       fileStr = fileStr.replace(item.full, `// ${item.full} // browser dependencies are global and do not need imports`);
     }
   });
+
+  if (customHTMLElementExtendedName !== undefined) {
+    fileStr = fileStr.replace(/HTMLElementExtended/g, customHTMLElementExtendedName.replace('.js', ''));
+  }
 
   return {
     sourcePath,

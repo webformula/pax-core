@@ -3,6 +3,8 @@ import path from 'path';
 import { promisify } from 'util';
 import glob from 'glob';
 import tags from 'common-tags';
+import window from '../polyfills/window.js';
+import document from '../polyfills/document.js';
 import HTMLElementExtended from '../HTMLElementExtended.js';
 import customElements from '../polyfills/customElements.js';
 import { getComponentFiles, removeFileFromPath } from './utils.js';

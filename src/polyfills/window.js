@@ -1,5 +1,5 @@
 // dummmy document object to make builds work correctly
-export default new class window {
+const window =  new class {
   get localStorage() {
     return {
       getItem() {},
@@ -9,3 +9,5 @@ export default new class window {
 };
 
 global.window = window;
+
+export default window;

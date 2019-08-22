@@ -17,6 +17,12 @@ const document = new class {
   querySelector() {
     return {};
   }
+
+  createElement() {
+    return {
+      style: {}
+    };
+  }
 };
 
 global.document = document;
