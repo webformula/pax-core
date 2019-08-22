@@ -2,9 +2,10 @@
  *   - Used for serverside rendering
  *   - Used for build steps
  */
-export default class HTMLElement {
+const HTMLElement = class {
   constructor() {
     this.style = {};
+    this.nodeName = 'temp';
   }
   appendChild() {}
   attachShadow() {
@@ -53,3 +54,5 @@ class ShadowRoot {
 
 // make it global so we do not need to import it into files and cause problems with the browser
 global.HTMLElement = HTMLElement;
+
+export default HTMLElement;

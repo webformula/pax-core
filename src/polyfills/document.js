@@ -1,7 +1,7 @@
 // dummmy document object to make builds work correctly
 const document = new class {
   getElementById(id) {
-    if (id.indexOf('--template') > 1) return {
+    if (id.indexOf('--template') > -1) return {
       content: {
         cloneNode: () => {
           return {

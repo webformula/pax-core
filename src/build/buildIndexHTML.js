@@ -5,6 +5,7 @@ import defaultLayout from './defaultLayout.js';
 import { checkPageFiles } from './utils.js';
 import { promisify } from 'util';
 import glob from 'glob';
+import { getComponentFiles } from './utils.js';
 
 const { html } = tags;
 const existsAsync = promisify(fs.exists);
@@ -16,17 +17,26 @@ export default async function ({ rootFolder, pagesFolder = 'pages', distFolder, 
   const layout = layoutFilePath !== undefined ? (await import(path.join(process.cwd(), layoutFilePath))).default : defaultLayout;
   const pageFiles = glob.sync(path.join(rootFolder, pagesFolder, '**/*.js') || []);
   const pages = await checkPageFiles(pageFiles);
-  const head = buildHead({ routeConfig, pages, pagesFolder });
+  const allFiles = glob.sync(path.join(rootFolder, '**/*.js') || []);
+  const componentFiles = await getComponentFiles(allFiles);
+  const head = buildHead({ routeConfig, pages, pagesFolder, componentFiles: componentFiles.map(f => f.replace(rootFolder, '')) });
   const { body, title } = await renderRootPage({ routeConfig, rootFolder, pagesFolder });
   const content = layout({ head, title, body });
   await writeFileAsync(path.join(distFolder, 'index.html'), content);
 };
 
-function buildHead({ routeConfig, pages, pagesFolder }) {
+function buildHead({ routeConfig, pages, pagesFolder, componentFiles }) {
   return html`
     <script type="module" src="@webformula/pax-core/index.js"></script>
+    <script type="module" src="component-templates.js"></script>
 
     <script type="module">
+      ${componentFiles.map(componentPath => {
+        return html`
+          import '${componentPath}';
+        `;
+      }).join('\n')}
+
       ${pages.map(pagePath => {
         const classFileName = pagePath.split(pagesFolder)[1];
         const className = classFileName.replace('/', '').replace('.js', '');
@@ -38,7 +48,6 @@ function buildHead({ routeConfig, pages, pagesFolder }) {
     </script>
 
     <script type="module" src="@webformula/pax-core/client.js"></script>
-    <script type="module" src="component-templates.js"></script>
 
     <!-- create globally accessable instance of page class -->
     <script type="module">

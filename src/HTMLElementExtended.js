@@ -1,14 +1,13 @@
 export default class HTMLElementExtended extends HTMLElement {
   constructor(name) {
     super();
-    this.__name = name;
   }
 
   /* Clone from pre built htmlTemplate
    *   - Rerender: replaces html but not styles. This is usefull for dynamic templates
    */
   cloneTemplate(rerender) {
-    const template = document.getElementById(`${this.__name}--template`);
+    const template = document.getElementById(`${this.nodeName.toLowerCase()}--template`);
     const templateContent = template.content;
     const shadowRoot = this.shadowRoot ? this.shadowRoot : this.attachShadow({mode: 'open'});
     const clone = templateContent.cloneNode(true);

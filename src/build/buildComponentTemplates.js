@@ -3,8 +3,9 @@ import path from 'path';
 import { promisify } from 'util';
 import glob from 'glob';
 import tags from 'common-tags';
-import customElements from '../polyfills/customElements.js';
 import HTMLElementExtended from '../HTMLElementExtended.js';
+import customElements from '../polyfills/customElements.js';
+import { getComponentFiles } from './utils.js';
 
 const { html } = tags;
 const readFileAsync = promisify(fs.readFile);
@@ -16,6 +17,7 @@ global.html = html;
 
 
 export default async function ({ rootFolder, distFolder }) {
+  const cwd = process.cwd();
   const srcFiles = glob.sync(path.join(rootFolder, '**/*.js')) || [];
   const componentFiles = await getComponentFiles(srcFiles);
   const templates = await getTemplates(componentFiles);
@@ -25,9 +27,7 @@ export default async function ({ rootFolder, distFolder }) {
 function makeFile(components) {
   return html`
     // create custom element templates
-    document.addEventListener('DOMContentLoaded', function (event) {
-      ${components.map(d => d.templateScript).join('\n')}
-    });
+    ${components.map(d => d.templateScript).join('\n')}
   `;
 }
 
@@ -69,16 +69,4 @@ async function getTemplates(componentFiles) {
       `
     };
   }));
-}
-
-async function getComponentFiles(srcFiles) {
-  const contents = await Promise.all(srcFiles.map(async p => {
-    const file = await readFileAsync(p);
-    return {
-      path: p,
-      isComponent: file.toString().includes('customElements.define')
-    };
-  }));
-
-  return contents.filter(({ isComponent }) => isComponent === true).map(p => p.path);
 }

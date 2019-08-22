@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { promisify } from 'util';
 import glob from 'glob';
-import { checkPageFiles } from './utils.js';
+import { checkPageFiles, removeFileFromPath } from './utils.js';
 
 const patternImport = new RegExp(/import(?:["'\s]*([\w*${}\n\r\t, ]+)from\s*)?["'\s]["'\s](.*[@\w_-]+)["'\s].*;$/, 'mg');
 const existsAsync = promisify(fs.exists);
@@ -38,9 +38,8 @@ async function getFiles(rootFolder, distFolder, pagesFolder, layoutFilePath) {
     a[b]
     return a;
   }, {});
-
   const files = nonPagesFiles.reduce((a, b) => {
-    if (imports[b.sourcePath]) a[b.sourcePath] = b;
+    if (imports[b.sourcePath] || b.isComponent) a[b.sourcePath] = b;
     return a;
   }, {});
   pagesFiles.forEach(p => files[p.sourcePath] = p)
@@ -72,8 +71,9 @@ async function evaluteImports(sourcePath, rootFolder, distFolder, dependencies) 
   imports.forEach(item => {
     if (item.path === '@webformula/pax-core') {
       item.browserPath = '/@webformula/pax-core/index.js';
+      if (item.importNames.includes('customElements')) item.importNames = item.importNames.filter(c => c !== 'customElements');
       // replace import with browser relitive path
-      const newImport = item.full.replace(item.path, item.browserPath);
+      let newImport = `import { ${item.importNames.join(', ')} } from '${item.browserPath}'`;
       fileStr = fileStr.replace(item.full, newImport);
     }
 
@@ -88,14 +88,9 @@ async function evaluteImports(sourcePath, rootFolder, distFolder, dependencies) 
     sourcePath,
     distPath: sourcePath.replace(rootFolder, distFolder),
     imports,
-    fileStr
+    fileStr,
+    isComponent: fileStr.includes('customElements.define')
   };
-}
-
-function removeFileFromPath(filePath) {
-  let noFilePath = filePath.split('/');
-  noFilePath.pop();
-  return noFilePath.join('/');
 }
 
 function extractImports(str) {
