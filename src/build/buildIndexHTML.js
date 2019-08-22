@@ -38,8 +38,8 @@ function buildHead({ routeConfig, pages, pagesFolder, componentFiles }) {
       }).join('\n')}
 
       ${pages.map(pagePath => {
-        const classFileName = pagePath.split(pagesFolder)[1];
-        const className = classFileName.replace('/', '').replace('.js', '');
+        const classFileName = pagePath.split(pagesFolder).pop();
+        const className = classFileName.split('/').pop().replace('.js', '').replace(/[-]+/g, '');
         return html`
           import ${className} from '/${path.join(pagesFolder, classFileName)}';
           window.${className} = ${className};

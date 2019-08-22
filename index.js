@@ -7,6 +7,7 @@ import build from './src/build/index.js';
 
 import tags from 'common-tags';
 const { html } = tags;
+const css = html;
 
 export {
   Page,
@@ -14,5 +15,6 @@ export {
   HTMLElementExtended,
   customElements,
   build,
-  html
+  html,
+  css
 }
