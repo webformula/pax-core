@@ -5,7 +5,7 @@ import glob from 'glob';
 import tags from 'common-tags';
 import HTMLElementExtended from '../HTMLElementExtended.js';
 import customElements from '../polyfills/customElements.js';
-import { getComponentFiles } from './utils.js';
+import { getComponentFiles, removeFileFromPath } from './utils.js';
 
 const { html } = tags;
 const readFileAsync = promisify(fs.readFile);
@@ -22,6 +22,9 @@ export default async function ({ rootFolder, distFolder }) {
   const componentFiles = await getComponentFiles(srcFiles);
   const templates = await getTemplates(componentFiles);
   await writeFileAsync(path.join(distFolder, 'component-templates.js'), makeFile(templates));
+
+  // return internal component css files. These should not be inscluded with the concated css
+  return templates.filter(s => s.internalStylesFile !== undefined).map(s => s.internalStylesFile);
 }
 
 function makeFile(components) {
@@ -43,15 +46,17 @@ async function getTemplates(componentFiles) {
     const instance = new componentClass();
     const template = instance.template();
     let styleString = instance.styles ? instance.styles() : '';
-    if (instance.stylesFile) {
-      const stylesFile = await readFileAsync(path.join(cwd, instance.stylesFile));
-      styleString = stylesFile.toString();
+    let internalStylesFile;
+    if (instance.internalStylesFile) {
+      internalStylesFile = path.join(removeFileFromPath(filePath), instance.internalStylesFile)
+      const internalStylesFileContent = await readFileAsync(path.join(cwd, internalStylesFile));
+      styleString = internalStylesFileContent.toString();
     }
 
     return {
       componentName,
       filePath,
-      stylesFile: instance.stylesFile,
+      internalStylesFile,
       styleString,
       template,
       templateScript: !(template || styleString) ? undefined : html`
