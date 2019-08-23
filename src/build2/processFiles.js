@@ -53,11 +53,6 @@ async function copysrcFiles(files) {
 }
 
 function processFile(file, customHTMLElementExtendedName, dependencies) {
-  // rename HTMLElementExtended
-  if (customHTMLElementExtendedName !== undefined) {
-    file.fileStr = file.fileStr.replace(/HTMLElementExtended/g, customHTMLElementExtendedName.replace('.js', ''));
-  }
-
   // adjust imports for browser
   file.imports.forEach(item => {
     // replace import with browser relitive path
@@ -72,8 +67,12 @@ function processFile(file, customHTMLElementExtendedName, dependencies) {
     else if (dependencies[item.path] !== undefined) {
       file.fileStr = file.fileStr.replace(item.full, `// ${item.full} // browser dependencies are global and do not need imports`);
     }
-  });
 
+    // rename HTMLElementExtended
+    if (customHTMLElementExtendedName !== undefined) {
+      file.fileStr = file.fileStr.replace(/HTMLElementExtended\s/g, customHTMLElementExtendedName.replace('.js', ' '));
+    }
+  });
   return file;
 }
 

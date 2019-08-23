@@ -87,7 +87,7 @@ async function evaluteImports(sourcePath, rootFolder, distFolder, dependencies, 
   if (customHTMLElementExtendedName !== undefined) {
     fileStr = fileStr.replace(/HTMLElementExtended/g, customHTMLElementExtendedName.replace('.js', ''));
   }
-
+  
   return {
     sourcePath,
     distPath: sourcePath.replace(rootFolder, distFolder),

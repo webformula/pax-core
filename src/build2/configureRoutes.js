@@ -7,7 +7,7 @@ const writeFileAsync = promisify(fs.writeFile);
 export default async function ({ rootFolder, distFolder, pagesFolder, routeConfig = {}, pagefiles }) {
   routeConfig.custom = routeConfig.custom || {};
   routeConfig.custom = Object.assign({}, pagefiles.reduce((a, b) => {
-    const route = b.sourcePath.replace(path.join(rootFolder, pagesFolder), '').replace(/^\/+/, '').replace('.js', '');
+    const route = b.sourcePath.replace(path.join(rootFolder, pagesFolder), '').replace('.js', '');
     a[route] = b.pageClassname;
     return a;
   }, {}));

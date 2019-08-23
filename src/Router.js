@@ -30,7 +30,7 @@ export default class Router {
   }
 
   set404(pageLocation) {
-    this._notFountRoute = pageLocation;
+    this._notFoundRoute = pageLocation;
   }
 
   get path() {
@@ -71,8 +71,8 @@ export default class Router {
     const match = this._match(path);
 
     if (match === false) {
-      if (this._notFountRoute) return this._changePage(this._notFountRoute);
-      else return console.warn('no page found and no default not found page setup');
+      if (this._notFoundRoute) return this._changePage(this._notFoundRoute);
+      else return console.warn('no page found and default not found page setup');
     }
 
     let url = path;
