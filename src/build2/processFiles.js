@@ -18,7 +18,6 @@ export default async function ({ rootFolder, distFolder, pagesFolder, layoutFile
   const jsfiles = glob.sync(path.join(rootFolder, '**/*.js'), { ignore }) || [];
   const files = await Promise.all(jsfiles.map(p => categorizeFile(p, rootFolder, distFolder)));
   const importSourcePaths = getImportSourcePaths(files);
-  console.log(importSourcePaths);
   const filesToCopy = files.filter(({ sourcePath, isComponent, isPage }) => importSourcePaths.includes(sourcePath) || isComponent || isPage);
   const processedFiles = filesToCopy.map(file => processFile(file, customHTMLElementExtendedName, dependencies));
   await copysrcFiles(processedFiles);
