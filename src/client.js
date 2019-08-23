@@ -1,5 +1,5 @@
 import Router from './Router.js';
-import { routerConfig } from './routerConfig.js';
+import { routerConfig } from '../../routerConfig.js';
 
 const router = new Router();
 // TODO impliment more router config

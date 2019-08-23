@@ -10,7 +10,12 @@ function html(strs, ...ev) {
 }
 
 const css = html;
+const tags = {
+  html,
+  css
+};
 
+export default tags;
 export {
   html,
   css
