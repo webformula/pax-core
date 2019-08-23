@@ -1,15 +1,17 @@
-import moveFiles from './moveFiles.js';
-import movePaxCoreFiles from './movePaxCoreFiles.js';
-import buildIndexHTML from './buildIndexHTML.js';
+import generateCore from './generateCore.js';
+import processFiles from './processFiles.js';
+import configureRoutes from './configureRoutes.js';
 import buildComponentTemplates from './buildComponentTemplates.js';
 import concatCSS from './concatCSS.js';
-import configureRoutes from './configureRoutes.js';
+import buildIndexHTML from './buildIndexHTML.js';
 
-export default async function ({ rootFolder, pagesFolder, distFolder = 'dist', layoutFilePath, routeConfig }, { includeIndexHTML = true, paxCoreIncludeOnly, customHTMLElementExtendedName } = {}) {
-  routeConfig = await configureRoutes({ rootFolder, pagesFolder, routeConfig });
-  await movePaxCoreFiles({ distFolder, routeConfig, paxCoreIncludeOnly, customHTMLElementExtendedName });
-  await moveFiles({ rootFolder, pagesFolder, distFolder, layoutFilePath, customHTMLElementExtendedName });
-  const componentCSSFiles = await buildComponentTemplates({ rootFolder, distFolder });
+export default async function ({ rootFolder, distFolder = 'dist', pagesFolder, layoutFilePath, routeConfig }, { includeIndexHTML = true, includeOnly, customHTMLElementExtendedName } = {}) {
+  await generateCore({ distFolder }, { includeOnly, customHTMLElementExtendedName });
+  const filesInfo = await processFiles({ rootFolder, distFolder, pagesFolder, layoutFilePath, customHTMLElementExtendedName });
+  const pagefiles = filesInfo.filter(({ isPage }) => isPage === true);
+  routeConfig = await configureRoutes({ rootFolder, distFolder, pagesFolder, routeConfig, pagefiles });
+  const componentFiles = filesInfo.filter(({ isComponent }) => isComponent === true);
+  const componentCSSFiles = await buildComponentTemplates({ distFolder, componentFiles });
   await concatCSS({ rootFolder, distFolder, componentCSSFiles });
-  if (includeIndexHTML === true) await buildIndexHTML({ rootFolder, pagesFolder, distFolder, layoutFilePath, routeConfig });
+  if (includeIndexHTML === true) await buildIndexHTML({ rootFolder, distFolder, pagesFolder, pagefiles, componentFiles, layoutFilePath, routeConfig });
 }
