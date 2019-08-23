@@ -5,7 +5,7 @@ import defaultLayout from './defaultLayout.js';
 import { checkPageFiles } from './utils.js';
 import { promisify } from 'util';
 import glob from 'glob';
-import { getComponentFiles } from './utils.js';
+import { getComponentFiles, convertPathToName } from './utils.js';
 
 const { html } = tags;
 const existsAsync = promisify(fs.exists);
@@ -38,8 +38,8 @@ function buildHead({ routeConfig, pages, pagesFolder, componentFiles }) {
       }).join('\n')}
 
       ${pages.map(pagePath => {
-        const classFileName = pagePath.split(pagesFolder).pop();
-        const className = classFileName.split('/').pop().replace('.js', '').replace(/[-]+/g, '');
+        const classFileName = pagePath.split(pagesFolder).pop().replace(/^\/+/, '');
+        const className = convertPathToName(classFileName);
         return html`
           import ${className} from '/${path.join(pagesFolder, classFileName)}';
           window.${className} = ${className};

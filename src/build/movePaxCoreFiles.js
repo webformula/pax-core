@@ -73,7 +73,7 @@ export default async function ({ distFolder = 'dist', paxCoreIncludeOnly, custom
   }
 
   if (includes['client.js'] === true) {
-    writeFileAsync(path.join(corePath, 'routerConfig.js'), `export const routerConfig = ${JSON.stringify(routeConfig)}`);
+    writeFileAsync(path.join(corePath, 'routerConfig.js'), `export const routerConfig = ${JSON.stringify(routeConfig, null, 2)}`);
   }
 
   await Promise.all(fileCopyArr).catch(e => console.error(e));

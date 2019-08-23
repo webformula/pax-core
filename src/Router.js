@@ -91,8 +91,9 @@ export default class Router {
     window.currentPageClass.disconnectedCallback();
     window.currentPageClass._disableRender = true;
 
-    const id = '$'+className; // page var name ( $Name.somefunc() )
-    window[id] = eval('new ' + className + '()');
+    const instance = eval('new ' + className + '()');
+    const id = '$'+instance.constructor.name; // page var name ( $Name.somefunc() )
+    window[id] = instance;
     window.currentPageClass = window[id];
     window.currentPageClass._disableRender = false;
     window[id].render();

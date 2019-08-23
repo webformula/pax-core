@@ -32,3 +32,8 @@ export function removeFileFromPath(filePath) {
   noFilePath.pop();
   return noFilePath.join('/');
 }
+
+
+export function convertPathToName(path) {
+  return path.replace('.js', '').replace(/[\/\-\.]/g, '_');
+}

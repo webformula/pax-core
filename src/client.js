@@ -11,3 +11,5 @@ if (routerConfig.custom) {
   });
 }
 router.init();
+
+window.router = router;

@@ -72,7 +72,7 @@ async function getTemplates(componentFiles) {
             ${instance.template()}
           </render-block>
         \`;
-        document.body.insertAdjacentHTML('beforeend', ${componentVarName});
+        document.body.insertAdjacentElement('beforeend', ${componentVarName});
       `
     };
   }));
