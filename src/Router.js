@@ -173,4 +173,16 @@ export default class Router {
         return params;
       }, null);
   }
+
+
+  getUrlParameters(parseStringOrRegex) {
+    if (!parseStringOrRegex) {
+      const match = this._match(this.path);
+      if (!match) return {};
+      return match.params || {};
+    }
+    const { regexp, paramNames } = this._replaceDynamicURLParts(parseStringOrRegex);
+    var match = this.path.replace(/^\/+/, '/').match(regexp);
+    return this._regExpResultToParams(match, paramNames);
+  }
 }
