@@ -15,13 +15,13 @@ const includes = {
   'tags.js': true
 };
 
-export default async function ({ distFolder }, { includeOnly, customHTMLElementExtendedName }) {
+export default async function ({ distFolder }, { includeOnlyDependencies, customHTMLElementExtendedName }) {
   const corePath = await createDir(distFolder, '@webformula', 'pax-core');
 
   // set included files
-  if (includeOnly !== undefined) {
+  if (includeOnlyDependencies !== undefined) {
     Object.keys(includes).forEach(key => {
-      includes[key] = includeOnly.includes(key);
+      includes[key] = includeOnlyDependencies.includes(key);
     });
   }
 

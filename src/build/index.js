@@ -5,8 +5,8 @@ import buildComponentTemplates from './buildComponentTemplates.js';
 import concatCSS from './concatCSS.js';
 import buildIndexHTML from './buildIndexHTML.js';
 
-export default async function ({ rootFolder, distFolder = 'dist', pagesFolder, layoutFilePath, routeConfig }, { includeIndexHTML = true, includeOnly, customHTMLElementExtendedName } = {}) {
-  await generateCore({ distFolder }, { includeOnly, customHTMLElementExtendedName });
+export default async function ({ rootFolder, distFolder = 'dist', pagesFolder, layoutFilePath, routeConfig }, { includeIndexHTML = true, includeOnlyDependencies, customHTMLElementExtendedName } = {}) {
+  await generateCore({ distFolder }, { includeOnlyDependencies, customHTMLElementExtendedName });
   const filesInfo = await processFiles({ rootFolder, distFolder, pagesFolder, layoutFilePath, customHTMLElementExtendedName });
   const pagefiles = filesInfo.filter(({ isPage }) => isPage === true);
   routeConfig = await configureRoutes({ rootFolder, distFolder, pagesFolder, routeConfig, pagefiles });
