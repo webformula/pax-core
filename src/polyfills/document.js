@@ -1,7 +1,7 @@
 // dummmy document object to make builds work correctly
-module.exports = new class document {
+const document = new class {
   getElementById(id) {
-    if (id.indexOf('--template') > 1) return {
+    if (id.indexOf('--template') > -1) return {
       content: {
         cloneNode: () => {
           return {
@@ -17,4 +17,14 @@ module.exports = new class document {
   querySelector() {
     return {};
   }
+
+  createElement() {
+    return {
+      style: {}
+    };
+  }
 };
+
+global.document = document;
+
+export default document
