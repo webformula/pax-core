@@ -58,7 +58,7 @@ export default async function ({ distFolder, componentFiles }) {
 function makeFile(components) {
   return html`
     // create custom element templates
-    document.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('DOMContentLoaded', function () {
       ${components.map(d => d.templateScript).join('\n')}
     });
   `;

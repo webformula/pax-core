@@ -58,7 +58,7 @@ function processFile(file, customHTMLElementExtendedName, dependencies) {
     // replace import with browser relitive path
     if (item.path === '@webformula/pax-core') {
       if (item.importNames.includes('customElements')) item.importNames = item.importNames.filter(c => c !== 'customElements');
-      let newImport = `import { ${item.importNames.join(', ')} } from '/@webformula/pax-core/index.js'`;
+      let newImport = `import { ${item.importNames.join(', ')} } from '/@webformula/pax-core/index.js';`;
       file.fileStr = file.fileStr.replace(item.full, newImport);
     }
 
@@ -73,6 +73,10 @@ function processFile(file, customHTMLElementExtendedName, dependencies) {
       file.fileStr = file.fileStr.replace(/HTMLElementExtended\s/g, customHTMLElementExtendedName.replace('.js', ' '));
     }
   });
+
+  if (file.isComponent) {
+    file.fileStr = file.fileStr.replace('customElements.define', 'window.addEventListener(\'DOMContentLoaded\', function () {\ncustomElements.define') + '\n});';
+  }
   return file;
 }
 
