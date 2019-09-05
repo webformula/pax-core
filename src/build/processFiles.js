@@ -93,7 +93,7 @@ async function categorizeFile(sourcePath, rootFolder, distFolder) {
     sourcePath,
     distPath: sourcePath.replace(rootFolder, distFolder),
     importPath: sourcePath.replace(rootFolder, ''),
-    isComponent: fileStr.includes('customElements.define'),
+    isComponent: !isPage && fileStr.includes('customElements.define'),
     componentName,
     isPage,
     pageClassname,
