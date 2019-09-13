@@ -15,18 +15,18 @@ const includes = {
   'tags.js': true
 };
 
-export default async function ({ distFolder }, { includeOnlyDependencies, customHTMLElementExtendedName }) {
+export default async function ({ distFolder }, { includeRouter = true, includePage = true, includeTags = true, includesHTMLExtended = true, customHTMLElementExtendedName }) {
   const corePath = await createDir(distFolder, '@webformula', 'pax-core');
-
-  // set included files
-  if (includeOnlyDependencies !== undefined) {
-    Object.keys(includes).forEach(key => {
-      includes[key] = includeOnlyDependencies.includes(key);
-    });
-  }
+  const _includes = Object.assign({}, includes, {
+    'HTMLElementExtended.js': includesHTMLExtended,
+    'Page.js': includePage,
+    'Router.js': includeRouter,
+    'client.js': includeRouter,
+    'tags.js': includeTags
+  });
 
   // get included file names
-  const fileNames = Object.keys(includes).filter(key => includes[key] === true);
+  const fileNames = Object.keys(_includes).filter(key => _includes[key] === true);
   // create renamed array
   const fileRenames = fileNames.reduce((a, b) => {
     if (b === 'HTMLElementExtended.js' && customHTMLElementExtendedName) a[b] = customHTMLElementExtendedName;

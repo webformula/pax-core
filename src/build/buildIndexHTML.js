@@ -9,15 +9,15 @@ const existsAsync = promisify(fs.exists);
 const writeFileAsync = promisify(fs.writeFile);
 
 
-export default async function ({ rootFolder, distFolder, pagesFolder, pagefiles, componentFiles, layoutFilePath, routeConfig }) {
+export default async function ({ rootFolder, distFolder, pagesFolder, pagefiles, componentFiles, layoutFilePath, routerConfig }) {
   const layout = layoutFilePath !== undefined ? (await import(path.join(process.cwd(), layoutFilePath))).default : defaultLayout;
-  const head = buildHead({ routeConfig, pagefiles, pagesFolder, componentFiles });
-  const { body, title } = await renderRootPage({ routeConfig, rootFolder, pagesFolder });
+  const head = buildHead({ routerConfig, pagefiles, pagesFolder, componentFiles });
+  const { body, title } = await renderRootPage({ routerConfig, rootFolder, pagesFolder });
   const content = layout({ head, title, body });
   await writeFileAsync(path.join(distFolder, 'index.html'), content);
 };
 
-function buildHead({ routeConfig, pagefiles, pagesFolder, componentFiles }) {
+function buildHead({ routerConfig, pagefiles, pagesFolder, componentFiles }) {
   return html`
     <script type="module" src="@webformula/pax-core/index.js"></script>
     <script type="module" src="component-templates.js"></script>
@@ -41,21 +41,21 @@ function buildHead({ routeConfig, pagefiles, pagesFolder, componentFiles }) {
 
     <!-- create globally accessable instance of page class -->
     <script type="module">
-      import ${routeConfig.root} from '/${path.join(pagesFolder, `${routeConfig.root.replace('.js', '')}.js`)}';
+      import ${routerConfig.root} from '/${path.join(pagesFolder, `${routerConfig.root.replace('.js', '')}.js`)}';
 
-      window.$${routeConfig.root} = new ${routeConfig.root}();
-      window.currentPageClass = window.$${routeConfig.root};
+      window.$${routerConfig.root} = new ${routerConfig.root}();
+      window.currentPageClass = window.$${routerConfig.root};
       setTimeout(function () {
-        window.$${routeConfig.root}.connectedCallback();
+        window.$${routerConfig.root}.connectedCallback();
       }, 0);
     </script>
   `;
 }
 
-async function renderRootPage({ routeConfig, rootFolder, pagesFolder }) {
-  if (routeConfig && routeConfig.root) {
+async function renderRootPage({ routerConfig, rootFolder, pagesFolder }) {
+  if (routerConfig && routerConfig.root) {
     const cwd = process.cwd();
-    const rootPagePath = path.join(cwd, rootFolder, pagesFolder, `${routeConfig.root.replace('.js', '')}.js`);
+    const rootPagePath = path.join(cwd, rootFolder, pagesFolder, `${routerConfig.root.replace('.js', '')}.js`);
     const rootPageExists = await existsAsync(rootPagePath);
     if (rootPageExists) {
       const rootClass = await import(rootPagePath);

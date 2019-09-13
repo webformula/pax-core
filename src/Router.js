@@ -130,9 +130,9 @@ export default class Router {
   _findMatchedRoutes(url) {
     return Object.keys(this.routes)
       .map(route => {
-        var { regexp, paramNames } = this._replaceDynamicURLParts(this._clean(route));
-        var match = url.replace(/^\/+/, '/').match(regexp);
-        var params = this._regExpResultToParams(match, paramNames);
+        const { regexp, paramNames } = this._replaceDynamicURLParts(this._clean(route));
+        const match = url.replace(/^\/+/, '/').match(regexp);
+        const params = this._regExpResultToParams(match, paramNames);
         return !match ? false : {
           match,
           route,
@@ -182,7 +182,7 @@ export default class Router {
       return match.params || {};
     }
     const { regexp, paramNames } = this._replaceDynamicURLParts(parseStringOrRegex);
-    var match = this.path.replace(/^\/+/, '/').match(regexp);
+    const match = this.path.replace(/^\/+/, '/').match(regexp);
     return this._regExpResultToParams(match, paramNames);
   }
 }

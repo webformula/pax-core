@@ -4,19 +4,19 @@ import { promisify, inspect } from 'util';
 
 const writeFileAsync = promisify(fs.writeFile);
 
-export default async function ({ rootFolder, distFolder, pagesFolder, routeConfig = {}, pagefiles }) {
-  routeConfig.custom = routeConfig.custom || {};
-  routeConfig.custom = Object.assign({}, routeConfig.custom, pagefiles.reduce((a, b) => {
+export default async function ({ rootFolder, distFolder, pagesFolder, routerConfig = {}, pagefiles }) {
+  routerConfig.custom = routerConfig.custom || {};
+  routerConfig.custom = Object.assign({}, routerConfig.custom, pagefiles.reduce((a, b) => {
     const route = b.sourcePath.replace(path.join(rootFolder, pagesFolder), '').replace('.js', '');
     a[route] = b.pageClassname;
     return a;
   }, {}));
 
-  if (!routeConfig.root) {
-    routeConfig.root = routeConfig.custom['/'] || routeConfig.custom.home || routeConfig.custom.index || routeConfig.custom[Object.keys(routeConfig.custom).pop()];
+  if (!routerConfig.root) {
+    routerConfig.root = routerConfig.custom['/'] || routerConfig.custom.home || routerConfig.custom.index || routerConfig.custom[Object.keys(routerConfig.custom).pop()];
   }
 
-  await writeFileAsync(path.join(distFolder, 'routerConfig.js'), `export const routerConfig = ${inspect(routeConfig, { compact: false, depth: null })};`);
+  await writeFileAsync(path.join(distFolder, 'routerConfig.js'), `export const routerConfig = ${inspect(routerConfig, { compact: false, depth: null })};`);
 
-  return routeConfig;
+  return routerConfig;
 }

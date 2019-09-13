@@ -9,6 +9,7 @@ const pageClassnameRegex = /export default class\s(.*)\sextends/;
 const patternImport = new RegExp(/import(?:["'\s]*([\w*${}\n\r\t, ]+)from\s*)?["'\s]["'\s](.*[@\w_-]+)["'\s].*;$/, 'mg');
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
+const tagsRegex = new RegExp('(html|css)(\\`|`|,|\s)', 'g');
 
 export default async function ({ rootFolder, distFolder, pagesFolder, layoutFilePath, customHTMLElementExtendedName }) {
   const packagejson = await readFileAsync('./package.json');
@@ -31,7 +32,9 @@ export default async function ({ rootFolder, distFolder, pagesFolder, layoutFile
     componentName,
     isPage,
     pageClassname,
-    imports
+    imports,
+    usesTags,
+    includesHTMLExtended
   }) => ({
     sourcePath,
     distPath,
@@ -40,7 +43,9 @@ export default async function ({ rootFolder, distFolder, pagesFolder, layoutFile
     componentName,
     isPage,
     pageClassname,
-    imports
+    imports,
+    usesTags,
+    includesHTMLExtended
   }));
 }
 
@@ -75,7 +80,7 @@ function processFile(file, customHTMLElementExtendedName, dependencies) {
   });
 
   if (file.isComponent) {
-    file.fileStr = file.fileStr.replace('customElements.define', 'window.addEventListener(\'DOMContentLoaded\', function () {\ncustomElements.define') + '\n});';
+    file.fileStr = file.fileStr.replace('customElements.define', 'window.addEventListener(\'DOMContentLoaded\', () => {\ncustomElements.define') + '\n});';
   }
   return file;
 }
@@ -102,7 +107,9 @@ async function categorizeFile(sourcePath, rootFolder, distFolder) {
     isPage,
     pageClassname,
     imports: extractImports(fileStr),
-    fileStr
+    fileStr,
+    usesTags: tagsRegex.test(fileStr),
+    includesHTMLExtended: !isPage && fileStr.includes('HTMLElementExtended')
   };
 }
 
