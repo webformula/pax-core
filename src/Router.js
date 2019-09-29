@@ -106,8 +106,10 @@ export default class Router {
     window.currentPageClass._disableRender = false;
     window[id].render();
     const renderBlock = document.querySelector('render-block-page');
+    // this covers desktop
     renderBlock.parentNode.scrollTop = 0;
-    if (MDWUtils.isMobile) document.documentElement.scrollTop = 0;
+    // this covers mobile
+    document.documentElement.scrollTop = 0;
     const pageTitle = document.querySelector('title');
     if (pageTitle) pageTitle.innerText = window[id].title;
     setTimeout(() => {
