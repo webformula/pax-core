@@ -2,55 +2,56 @@
  *   - Used for serverside rendering
  *   - Used for build steps
  */
-const HTMLElement = class {
+
+class BaseHTMLElement {
   constructor() {
     this.style = {};
-    this.nodeName = 'temp';
   }
+
+  get classList() {
+   return {
+     add() {},
+     remove() {},
+     contains() {}
+   };
+  }
+
+  get nodeName() { return ''; }
+
   appendChild() {}
-  attachShadow() {
-    this.shadowRoot = new ShadowRoot();
-    return this.shadowRoot;
-  }
+  remove() {}
+  insertAdjacentHTML() {}
+  querySelector() { return null; }
+
   hasAttribute() {}
   getAttribute() {}
   setAttribute() {}
   removeAttribute() {}
+
   addEventListener() {}
   removeEventListener() {}
-  getAttribute() { return ''; }
-  hasAttribute() {}
-  setAttribute() {}
-  insertAdjacentHTML() {}
-  get parentNode() {
-    return {
-      hasAttribute() {},
-      getAttribute() {},
-      setAttribute() {},
-      removeAttribute() {},
-      addEventListener() {},
-      removeEventListener() {},
-      getAttribute() { return ''; },
-      hasAttribute() {},
-      setAttribute() {}
-    };
+
+  attachShadow() {
+   this.shadowRoot = new ShadowRoot();
+   return this.shadowRoot;
   }
-  get classList() {
-    return {
-      add() {},
-      remove() {},
-      contains() {}
-    }
-  }
-};
+}
 
 class ShadowRoot {
   innerHTML() {}
   appendChild() {}
   querySelector(selector) {
-    if (selector === 'render-block') return {};
+   if (selector === 'render-block') return {};
   }
 }
+
+const HTMLElement = class extends BaseHTMLElement {
+  constructor() {
+    super();
+
+    this.parentNode = new BaseHTMLElement();
+  }
+};
 
 // make it global so we do not need to import it into files and cause problems with the browser
 global.HTMLElement = HTMLElement;

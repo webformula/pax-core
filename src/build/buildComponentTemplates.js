@@ -4,6 +4,7 @@ import { promisify } from 'util';
 import glob from 'glob';
 import tags from 'common-tags';
 import window from '../polyfills/window.js';
+import navigator from '../polyfills/navigator.js';
 import document from '../polyfills/document.js';
 import HTMLElementExtended from '../HTMLElementExtended.js';
 import customElements from '../polyfills/customElements.js';

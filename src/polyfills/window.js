@@ -6,6 +6,12 @@ const window =  new class {
       setItem() {}
     };
   }
+
+  getComputedStyle() {
+    return {
+      getPropertyValue() {}
+    };
+  }
 };
 
 global.window = window;

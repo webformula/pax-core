@@ -99,7 +99,7 @@ export default class Router {
     window[id].render();
     const renderBlock = document.querySelector('render-block-page');
     renderBlock.parentNode.scrollTop = 0;
-    const pageTitle = document.querySelector('.pax-core-title-inject');
+    const pageTitle = document.querySelector('title');
     if (pageTitle) pageTitle.innerText = window[id].title;
     setTimeout(() => {
       if (window[id].connectedCallback) window[id].connectedCallback();

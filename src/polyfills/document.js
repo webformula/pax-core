@@ -23,6 +23,19 @@ const document = new class {
       style: {}
     };
   }
+
+  get documentElement() {
+    return {}
+  }
+
+  get body() {
+    return {
+      classList: {
+        add() {},
+        remove() {}
+      }
+    }
+  }
 };
 
 global.document = document;

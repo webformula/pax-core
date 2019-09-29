@@ -63,14 +63,14 @@ async function renderRootPage({ routerConfig, rootFolder, pagesFolder }) {
       const instance = new rootClass.default();
       return {
         body: buildTemplate(instance),
-        title: `<span class="pax-core-title">${instance.title}</span>`
+        title: instance.title
       };
     }
   }
 
   return {
     body: buildTemplate(),
-    title: '<span class="pax-core-title">Home</span>'
+    title: 'Home'
   };
 }
 
