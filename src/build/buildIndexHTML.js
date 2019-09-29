@@ -49,6 +49,12 @@ function buildHead({ routerConfig, pagefiles, pagesFolder, componentFiles }) {
         window.$${routerConfig.root}.connectedCallback();
       }, 0);
     </script>
+
+    <style>
+      .hide-page-on-load {
+        display: none !important;
+      }
+    </style>
   `;
 }
 
@@ -76,7 +82,7 @@ async function renderRootPage({ routerConfig, rootFolder, pagesFolder }) {
 
 function buildTemplate(instance) {
   return html`
-    <render-block-page>
+    <render-block-page class="hide-page-on-load">
       ${instance ? instance.template() : ''}
     </render-block-page>
   `;

@@ -9,6 +9,8 @@ export default class Router {
     this.REPLACE_WILDCARD = '(?:.*)';
     this.FOLLOWED_BY_SLASH_REGEXP = '(?:\/$|$)';
     this.MATCH_REGEXP_FLAGS = '';
+
+    if (this.path === '' || this.path === '/') this.showPage();
   }
 
   init() {
@@ -17,6 +19,12 @@ export default class Router {
     window.addEventListener('DOMContentLoaded', () => {
       this._resolve(true);
     });
+  }
+
+  showPage() {
+    if (this.pageShowing) return;
+    this.pageShowing = true;
+    document.querySelector('render-block-page').classList.remove('hide-page-on-load');
   }
 
   add(path, pageLocation) {
@@ -99,11 +107,13 @@ export default class Router {
     window[id].render();
     const renderBlock = document.querySelector('render-block-page');
     renderBlock.parentNode.scrollTop = 0;
+    if (MDWUtils.isMobile) document.documentElement.scrollTop = 0;
     const pageTitle = document.querySelector('title');
     if (pageTitle) pageTitle.innerText = window[id].title;
     setTimeout(() => {
       if (window[id].connectedCallback) window[id].connectedCallback();
     }, 0);
+    this.showPage();
   }
 
   _clean(str) {

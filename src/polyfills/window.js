@@ -7,6 +7,9 @@ const window =  new class {
     };
   }
 
+  addEventListener() {}
+  removeEventListener() {}
+
   getComputedStyle() {
     return {
       getPropertyValue() {}
