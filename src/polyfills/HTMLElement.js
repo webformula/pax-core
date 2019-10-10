@@ -22,6 +22,7 @@ class BaseHTMLElement {
   remove() {}
   insertAdjacentHTML() {}
   querySelector() { return null; }
+  querySelectorAll() { return []; }
 
   hasAttribute() {}
   getAttribute() {}
@@ -43,6 +44,7 @@ class ShadowRoot {
   querySelector(selector) {
    if (selector === 'render-block') return {};
   }
+  querySelectorAll() { return []; }
 }
 
 const HTMLElement = class extends BaseHTMLElement {

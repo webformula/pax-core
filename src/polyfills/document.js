@@ -15,7 +15,9 @@ const document = new class {
   }
 
   querySelector() {
-    return {};
+    return {
+      style: {}
+    };
   }
 
   createElement() {
@@ -30,6 +32,7 @@ const document = new class {
 
   get body() {
     return {
+      insertAdjacentHTML() {},
       classList: {
         add() {},
         remove() {}
