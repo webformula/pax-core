@@ -11,6 +11,6 @@ pax-core is fully functional but the interfaces may change
 [components](http://components.webformula.io)
 
 # Example
-- [basic][https://github.com/webformula/pax-documentation-example]
-- [basic with auth][https://github.com/webformula/pax-example-with-auth]
-- [documentation site][https://github.com/webformula/pax-documentation]
+- [basic](https://github.com/webformula/pax-documentation-example)
+- [basic with auth](https://github.com/webformula/pax-example-with-auth)
+- [documentation site](https://github.com/webformula/pax-documentation)
