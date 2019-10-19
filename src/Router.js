@@ -99,6 +99,9 @@ export default class Router {
     window.currentPageClass.disconnectedCallback();
     window.currentPageClass._disableRender = true;
 
+    // try uppercassing the first letter to follow class standards
+    if (!window[className]) className = className.charAt(0).toUpperCase() + className.slice(1);
+    
     const instance = eval('new ' + className + '()');
     const id = '$'+instance.constructor.name; // page var name ( $Name.somefunc() )
     window[id] = instance;
