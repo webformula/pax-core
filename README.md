@@ -6,9 +6,9 @@ This project is in its early stages
 pax-core is fully functional but the interfaces may change
 
 # Links
-[MDZ Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components)
-[documentation](http://webformula.io)
-[components](http://components.webformula.io)
+- [MDZ Web Components](https://developer.mozilla.org/en-US/docs/Web/Web_Components)
+- [documentation](http://webformula.io)
+- [components](http://components.webformula.io)
 
 # Example
 - [basic](https://github.com/webformula/pax-documentation-example)
