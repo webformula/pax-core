@@ -17,7 +17,7 @@ export default class Router {
     // browser events for url changes
     window.addEventListener('hashchange', this._resolve.bind(this));
     window.addEventListener('DOMContentLoaded', () => {
-      this._resolve(true);
+      this._resolve(undefined, true);
     });
   }
 
@@ -74,7 +74,10 @@ export default class Router {
   // --- private ---
 
   // resolve path and update page
-  _resolve(initial = false) {
+  _resolve(event, initial = false) {
+    // prevent page looping
+    if (initial === false && event.oldURL === event.newURL);
+
     const path = this.path;
     const match = this._match(path);
 
@@ -101,7 +104,7 @@ export default class Router {
 
     // try uppercassing the first letter to follow class standards
     if (!window[className]) className = className.charAt(0).toUpperCase() + className.slice(1);
-    
+
     const instance = eval('new ' + className + '()');
     const id = '$'+instance.constructor.name; // page var name ( $Name.somefunc() )
     window[id] = instance;
