@@ -4,8 +4,9 @@ import configureRoutes from './configureRoutes.js';
 import buildComponentTemplates from './buildComponentTemplates.js';
 import concatCSS from './concatCSS.js';
 import buildIndexHTML from './buildIndexHTML.js';
+import buildEntryFile from './buildEntryFile.js';
 
-export default async function ({ rootFolder, distFolder = 'dist', pagesFolder, layoutFilePath, routerConfig }, { customHTMLElementExtendedName, includeIndexHTML = true, includeRouter = true, includePage, includeTags, includesHTMLExtended } = {}) {
+export default async function ({ rootFolder, distFolder = 'dist', pagesFolder, layoutFilePath, routerConfig }, { customHTMLElementExtendedName, includeEntry = true, includeIndexHTML = true, includeRouter = true, includePage, includeTags, includesHTMLExtended } = {}) {
   const filesInfo = await processFiles({ rootFolder, distFolder, pagesFolder, layoutFilePath, customHTMLElementExtendedName });
   if (includePage === undefined) includePage = filesInfo.filter(({ isPage }) => isPage === true).length > 0;
   if (includeTags === undefined) includeTags = filesInfo.filter(({ usesTags }) => usesTags === true).length > 0;
@@ -16,5 +17,6 @@ export default async function ({ rootFolder, distFolder = 'dist', pagesFolder, l
   const componentFiles = filesInfo.filter(({ isComponent }) => isComponent === true);
   const componentCSSFiles = await buildComponentTemplates({ distFolder, componentFiles });
   await concatCSS({ rootFolder, distFolder, componentCSSFiles });
-  if (includeIndexHTML === true) await buildIndexHTML({ rootFolder, distFolder, pagesFolder, pagefiles, componentFiles, layoutFilePath, routerConfig });
+  if (includeEntry === true) await buildEntryFile({ distFolder, pagefiles, componentFiles, routerConfig, pagesFolder });
+  if (includeIndexHTML === true) await buildIndexHTML({ rootFolder, distFolder, pagesFolder, layoutFilePath, routerConfig });
 }
