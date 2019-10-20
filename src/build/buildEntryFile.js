@@ -11,7 +11,9 @@ export default async function ({ distFolder, pagefiles, componentFiles, routerCo
 
 
 function buildFile({ routerConfig, pagefiles, pagesFolder, componentFiles }) {
-  return `import './@webformula/pax-core/client.js';
+  return `import './@webformula/pax-core/index.js';
+import './component-templates.js';
+import './@webformula/pax-core/client.js';
 import ${routerConfig.root} from './${path.join(pagesFolder, `${routerConfig.root.replace('.js', '')}.js`)}';
 ${componentFiles.map(({ importPath }) => `import '${importPath}';`).join('\n')}
 

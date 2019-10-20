@@ -19,8 +19,6 @@ export default async function ({ rootFolder, distFolder, pagesFolder, layoutFile
 
 function buildHead() {
   return html`
-    <script type="module" src="@webformula/pax-core/index.js"></script>
-    <script type="module" src="component-templates.js"></script>
     <script type="module" src="entry.js"></script>
 
     <style>
