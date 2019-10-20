@@ -63,7 +63,8 @@ function processFile(file, customHTMLElementExtendedName, dependencies) {
     // replace import with browser relitive path
     if (item.path === '@webformula/pax-core') {
       if (item.importNames.includes('customElements')) item.importNames = item.importNames.filter(c => c !== 'customElements');
-      let newImport = `import { ${item.importNames.join(', ')} } from '/@webformula/pax-core/index.js';`;
+      const paxCorePath = `./${[...new Array(file.fileDepth)].map(i => '../').join('')}@webformula/pax-core/index.js`;
+      const newImport = `import { ${item.importNames.join(', ')} } from '${paxCorePath}';`;
       file.fileStr = file.fileStr.replace(item.full, newImport);
     }
 
@@ -98,10 +99,13 @@ async function categorizeFile(sourcePath, rootFolder, distFolder) {
   const componentName = !isComponent ? '' : componentNameRegex.exec(fileStr)[2];
   const isPage = fileStr.includes('extends Page');
   const pageClassname = !isPage ? '' : pageClassnameRegex.exec(fileStr)[1];
+  const importPath = sourcePath.replace(rootFolder, '');
   return {
     sourcePath,
     distPath: sourcePath.replace(rootFolder, distFolder),
-    importPath: sourcePath.replace(rootFolder, ''),
+    importPath,
+    // this will help build the import path for pax-core
+    fileDepth: importPath.split('/').length - 2,
     isComponent: !isPage && fileStr.includes('customElements.define'),
     componentName,
     isPage,
