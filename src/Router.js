@@ -52,7 +52,7 @@ export default class Router {
     return this._clean(window.location.href);
   }
 
-  getParameters() {
+  getQueryParameters() {
     return this._extractGETParameters(this.current).split(',').filter(a => !!a).reduce((a, b) => {
       const split = b.split('=');
       a[split[0]] = split[1];
@@ -60,14 +60,29 @@ export default class Router {
     }, {});
   }
 
-  getParameter(name) {
-    return this.getParameters()[name];
+  getQueryParameter(name) {
+    return this.getQueryParameters()[name];
   }
 
-  addParameter(name, value) {
-    const parameters = this.getParameters();
+  addQueryParameter(name, value) {
+    const parameters = this.getQueryParameters();
     parameters[name] = value;
     window.location.href = window.location.href.split('?')[0] + '?' + Object.keys(parameters).map(key => `${key}=${parameters[key]}`).join(',');
+  }
+
+  getUrlParameters(parseStringOrRegex) {
+    if (!parseStringOrRegex) {
+      const match = this._match(this.path);
+      if (!match) return {};
+      return match.params || {};
+    }
+    const { regexp, paramNames } = this._replaceDynamicURLParts(parseStringOrRegex);
+    const match = this.path.replace(/^\/+/, '/').match(regexp);
+    return this._regExpResultToParams(match, paramNames);
+  }
+
+  getUrlParameter(name) {
+    return this.getUrlParameters()[name];
   }
 
 
@@ -190,17 +205,5 @@ export default class Router {
         params[names[index]] = decodeURIComponent(value);
         return params;
       }, null);
-  }
-
-
-  getUrlParameters(parseStringOrRegex) {
-    if (!parseStringOrRegex) {
-      const match = this._match(this.path);
-      if (!match) return {};
-      return match.params || {};
-    }
-    const { regexp, paramNames } = this._replaceDynamicURLParts(parseStringOrRegex);
-    const match = this.path.replace(/^\/+/, '/').match(regexp);
-    return this._regExpResultToParams(match, paramNames);
   }
 }
