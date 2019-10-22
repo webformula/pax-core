@@ -31,6 +31,7 @@ ${pagefiles.map(({ importPath, pageClassname }) => {
   return html`
     import ${pageClassname} from '.${importPath}';
     globalThis.${pageClassname} = ${pageClassname};
+    if (${pageClassname}.routes && ${pageClassname}.routes.length) ${pageClassname}.routes.forEach(route => router.add(route, '${pageClassname}'));
   `;
 }).join('\n')}
 

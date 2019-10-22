@@ -6,6 +6,8 @@ import tags from 'common-tags';
 import window from '../polyfills/window.js';
 import navigator from '../polyfills/navigator.js';
 import document from '../polyfills/document.js';
+import localStorage from '../polyfills/localStorage.js';
+import location from '../polyfills/location.js';
 import HTMLElementExtended from '../HTMLElementExtended.js';
 import customElements from '../polyfills/customElements.js';
 import { removeFileFromPath } from './utils.js';
