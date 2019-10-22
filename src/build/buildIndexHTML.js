@@ -25,6 +25,10 @@ function buildHead() {
       .hide-page-on-load {
         display: none !important;
       }
+
+      .mdw-hide-other-than-page-content {
+        display: none;
+      }
     </style>
   `;
 }

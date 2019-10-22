@@ -1,5 +1,7 @@
 export default class Page {
-  constructor() {}
+  constructor() {
+    if (globalThis.displayPageContentOnly) this.displayPageContentOnly(true);
+  }
 
   // called once page is renderd
   connectedCallback() {}
@@ -17,6 +19,30 @@ export default class Page {
     if (this.beforeRender) this.beforeRender();
     renderBlock.innerHTML = `<style>${this.styles()}</style>${this.template()}`;
     if (this.afterRender) this.afterRender();
+  }
+
+  // hide any non immidiate elements above or on the same level ad the page content
+  displayPageContentOnly(reverse = false) {
+    const renderBlock = document.querySelector('render-block-page');
+    const html = document.documentElement;
+    let node = renderBlock;
+    let sibling;
+    let directPatent = renderBlock;
+
+    while (node.parentNode && node.parentNode !== html) {
+      node = node.parentNode;
+      sibling = node.firstChild;
+      while (sibling) {
+    		if (sibling.nodeType === 1 && sibling !== directPatent) {
+    			if (reverse) sibling.classList.remove('mdw-hide-other-than-page-content');
+          else sibling.classList.add('mdw-hide-other-than-page-content');
+    		}
+    		sibling = sibling.nextSibling
+    	}
+      directPatent = node;
+    }
+
+    globalThis.displayPageContentOnly = !reverse;
   }
 
   // Called before render(). placeholder, can be overidden
