@@ -3,22 +3,27 @@ import path from 'path';
 import tags from 'common-tags';
 import defaultLayout from './defaultLayout.js';
 import { promisify } from 'util';
+import { getServiceWorkerRegister } from './buildServiceWorker.js';
 
 const { html } = tags;
 const existsAsync = promisify(fs.exists);
 const writeFileAsync = promisify(fs.writeFile);
 
 
-export default async function ({ rootFolder, distFolder, pagesFolder, layoutFilePath, routerConfig }) {
+export default async function ({ rootFolder, distFolder, pagesFolder, layoutFilePath, routerConfig, serviceWorker }) {
   const layout = layoutFilePath !== undefined ? (await import(path.join(process.cwd(), layoutFilePath))).default : defaultLayout;
-  const head = buildHead();
+  const head = buildHead({ serviceWorker });
   const { body, title } = await renderRootPage({ routerConfig, rootFolder, pagesFolder });
   const content = layout({ head, title, body });
   await writeFileAsync(path.join(distFolder, 'index.html'), content);
 };
 
-function buildHead() {
+function buildHead({ serviceWorker }) {
   return html`
+    <script>
+      ${getServiceWorkerRegister(serviceWorker)}
+    </script>
+
     <script type="module" src="entry.js"></script>
 
     <style>

@@ -12,5 +12,7 @@ export default async function ({ rootFolder, distFolder, componentCSSFiles }) {
   // remove component interal styles
   cssFiles = cssFiles.filter(p => !componentCSSFiles.includes(p));
   const contents = await Promise.all(cssFiles.map(p => readFileAsync(p)));
-  await writeFileAsync(path.join(distFolder, 'app.css'), contents.map(p => p.toString()).join('\n'));
+  const writePath = path.join(distFolder, 'app.css');
+  await writeFileAsync(writePath, contents.map(p => p.toString()).join('\n'));
+  return writePath.replace(distFolder, '');
 }

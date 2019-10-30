@@ -35,17 +35,25 @@ export default async function ({ distFolder }, { includeRouter = true, includePa
   }, {});
 
   // copy core files
-  await Promise.all(fileNames.map(async f => {
+  const paths = await Promise.all(fileNames.map(async f => {
     // handle renaming HTMLElementExtended class
     if (f === 'HTMLElementExtended.js') {
       const content = await readFileAsync('./node_modules/@webformula/pax-core/src/HTMLElementExtended.js');
-      return writeFileAsync(path.join(corePath, fileRenames[f]), content.toString().replace('HTMLElementExtended', fileRenames[f].replace('.js', '')));
+      const wPath = path.join(corePath, fileRenames[f]);
+      await writeFileAsync(wPath, content.toString().replace('HTMLElementExtended', fileRenames[f].replace('.js', '')));
+      return wPath;
     }
-    await copyFileAsync(`./node_modules/@webformula/pax-core/src/${f}`, path.join(corePath, f));
+    const writePath = path.join(corePath, f);
+    await copyFileAsync(`./node_modules/@webformula/pax-core/src/${f}`, writePath);
+    return writePath;
   }));
 
   // create index file
-  await writeFileAsync(path.join(corePath, 'index.js'), createIndex(fileNames, fileRenames));
+  const wPath = path.join(corePath, 'index.js');
+  await writeFileAsync(wPath, createIndex(fileNames, fileRenames));
+  paths.push(wPath);
+
+  return paths.map(p => p.replace(distFolder, ''));
 }
 
 function createIndex(fileNames, fileRenames) {
