@@ -25,7 +25,7 @@ import './@webformula/pax-core/index.js';
 import './component-templates.js';
 import './@webformula/pax-core/client.js';
 import ${routerConfig.root} from './${path.join(pagesFolder, `${routerConfig.root.replace('.js', '')}.js`)}';
-${componentFiles.map(({ importPath }) => `import '${importPath}';`).join('\n')}
+${componentFiles.map(({ importPath }) => `import './${path.join('./', importPath)}';`).join('\n')}
 
 ${pagefiles.map(({ importPath, pageClassname }) => {
   return html`

@@ -1,10 +1,17 @@
 import fs from 'fs';
 import path from 'path';
+import glob from 'glob';
 import { promisify } from 'util';
 
 const writeFileAsync = promisify(fs.writeFile);
 
 export async function buildServiceWorker({ distFolder, cacheFiles }) {
+  // allow glob and wild card patterns to be used
+  cacheFiles = cacheFiles.reduce((a, path) => {
+    const files = glob.sync(`${distFolder}/${path}`);
+    if (files && files.length) return a.concat(files.map(p => p.replace(distFolder, '')));
+    return a.concat(path);
+  }, []);
   const version = `${Date.now()}_${parseInt(Math.random() * 999999)}`;
   await writeFileAsync(`${distFolder}/serviceWorker.js`, serviceWorkerFile({ version, cacheFiles: cacheFiles.join(`?${version}",\n"`) }));
 }
