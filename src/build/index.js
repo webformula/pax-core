@@ -8,7 +8,7 @@ import buildEntryFile from './buildEntryFile.js';
 import { buildServiceWorker } from './buildServiceWorker.js';
 import copyFilesForBuild from './copyFiles.js';
 
-export default async function ({ rootFolder, distFolder = 'dist', pagesFolder, layoutFilePath, routerConfig, copyFiles = ([] = [{ from: undefined, to: undefined }]), serviceWorker = ({ } = { include: false, autoReload: true, cacheFiles: undefined }) }, { customHTMLElementExtendedName, includeEntry = true, includeIndexHTML = true, includeRouter = true, includePage, includeTags, includesHTMLExtended } = {}) {
+export default async function ({ rootFolder, distFolder = 'dist', pagesFolder, layoutFilePath, routerConfig, cacheBust = false, copyFiles = ([] = [{ from: undefined, to: undefined }]), serviceWorker = ({ } = { include: false, autoReload: true, cacheFiles: undefined }) }, { customHTMLElementExtendedName, includeEntry = true, includeIndexHTML = true, includeRouter = true, includePage, includeTags, includesHTMLExtended } = {}) {
   const filesInfo = await processFiles({ rootFolder, distFolder, pagesFolder, layoutFilePath, customHTMLElementExtendedName });
   if (includePage === undefined) includePage = filesInfo.filter(({ isPage }) => isPage === true).length > 0;
   if (includeTags === undefined) includeTags = filesInfo.filter(({ usesTags }) => usesTags === true).length > 0;
@@ -21,7 +21,7 @@ export default async function ({ rootFolder, distFolder = 'dist', pagesFolder, l
   const cssPath = await concatCSS({ rootFolder, distFolder, componentCSSFiles });
   const copiedFilePaths = await copyFilesForBuild({ distFolder, rootFolder, copyFiles });
   if (includeEntry === true) await buildEntryFile({ distFolder, pagefiles, componentFiles, routerConfig, pagesFolder });
-  if (includeIndexHTML === true) await buildIndexHTML({ rootFolder, distFolder, pagesFolder, layoutFilePath, routerConfig, serviceWorker });
+  if (includeIndexHTML === true) await buildIndexHTML({ rootFolder, distFolder, pagesFolder, layoutFilePath, routerConfig, serviceWorker, cacheBust });
   if (serviceWorker && serviceWorker.include) {
     const pagePaths = pagefiles.map(({ importPath }) => importPath);
     const componentPaths = componentFiles.map(({ importPath }) => importPath);

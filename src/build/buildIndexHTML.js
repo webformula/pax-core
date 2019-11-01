@@ -10,21 +10,22 @@ const existsAsync = promisify(fs.exists);
 const writeFileAsync = promisify(fs.writeFile);
 
 
-export default async function ({ rootFolder, distFolder, pagesFolder, layoutFilePath, routerConfig, serviceWorker }) {
+export default async function ({ rootFolder, distFolder, pagesFolder, layoutFilePath, routerConfig, serviceWorker, cacheBust = false }) {
   const layout = layoutFilePath !== undefined ? (await import(path.join(process.cwd(), layoutFilePath))).default : defaultLayout;
-  const head = buildHead({ serviceWorker });
+  const head = buildHead({ serviceWorker, cacheBust });
   const { body, title } = await renderRootPage({ routerConfig, rootFolder, pagesFolder });
   const content = layout({ head, title, body });
   await writeFileAsync(path.join(distFolder, 'index.html'), content);
 };
 
-function buildHead({ serviceWorker }) {
+function buildHead({ serviceWorker, cacheBust }) {
+  console.log(cacheBust)
   return html`
     <script>
       ${getServiceWorkerRegister(serviceWorker)}
     </script>
 
-    <script type="module" src="entry.js"></script>
+    <script type="module" src="entry.js${cacheBust ? `?${Date.now()}` : ''}"></script>
 
     <style>
       .hide-page-on-load {

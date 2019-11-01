@@ -11,23 +11,22 @@ const statAsync = promisify(fs.stat);
 // copy files
 //  from: bases on glob selector
 //  to: dest folder based
-export default async function ({ distFolder, rootFolder, copyFiles }) {
+export default async function ({ distFolder, copyFiles }) {
   if (!copyFiles) return [];
 
   const nestedPaths = await Promise.all(copyFiles.map(async ({ to, from }) => {
-    const corePath = await createDir(distFolder, to);
-    const files = glob.sync(path.join(rootFolder, from)) || [];
+    const corePath = await createDir(to);
+    const files = glob.sync(path.join(from)) || [];
 
     const paths = await Promise.all(files.filter(f => path.extname(f) !== '').map(async (f, i) => {
-      const fromDir = path.join(rootFolder, path.parse(from).dir);
-      const toDir = path.parse(to).dir;
+      const fromDir = path.parse(from).dir;
       const fileName = path.parse(f).base;
-      const destPath = path.join(distFolder, f.replace(fromDir, toDir).replace(`/${fileName}`, ''));
+      const destPath = path.join(f.replace(fromDir, to).replace(`/${fileName}`, ''));
       const destFile = path.join(destPath, fileName)
-
+      
       // create folders that dont exists
       try {
-        const stat = await statAsync(destPath);
+        await statAsync(destPath);
       } catch (e) {
         await mkdirAsync(destPath, { recursive: true });
       }
