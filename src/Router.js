@@ -123,7 +123,8 @@ export default class Router {
     const instance = eval('new ' + className + '()');
     const id = '$'+instance.constructor.name; // page var name ( $Name.somefunc() )
     window[id] = instance;
-    window.currentPageClass = window[id];
+    window.activePage = instance;
+    window.currentPageClass = instance;
     window.currentPageClass._disableRender = false;
     window[id].render();
     const renderBlock = document.querySelector('render-block-page');

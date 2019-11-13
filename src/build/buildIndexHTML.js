@@ -19,7 +19,6 @@ export default async function ({ rootFolder, distFolder, pagesFolder, layoutFile
 };
 
 function buildHead({ serviceWorker, cacheBust }) {
-  console.log(cacheBust)
   return html`
     <script>
       ${getServiceWorkerRegister(serviceWorker)}
