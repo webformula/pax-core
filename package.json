@@ -1,11 +1,11 @@
 {
   "name": "@webformula/pax-core",
-  "version": "0.4.15-beta",
+  "version": "0.4.16-beta",
   "description": "PAX pages and components tool set. Build, render, and serve web-pages and web-components",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js",
+    "start": "npm run checkTypeModule && exho PACKAGE_TYPE && node index.js",
     "watch": "nodemon index.js",
     "example": "node example/server.js"
   },
