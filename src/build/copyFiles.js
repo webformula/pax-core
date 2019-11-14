@@ -12,7 +12,7 @@ const statAsync = promisify(fs.stat);
 //  from: bases on glob selector
 //  to: dest folder based
 export default async function ({ distFolder, copyFiles }) {
-  if (!copyFiles) return [];
+  if (!copyFiles || !copyFiles.length || !copyFiles[0].to) return [];
 
   const nestedPaths = await Promise.all(copyFiles.map(async ({ to, from }) => {
     const corePath = await createDir(to);
@@ -23,7 +23,7 @@ export default async function ({ distFolder, copyFiles }) {
       const fileName = path.parse(f).base;
       const destPath = path.join(f.replace(fromDir, to).replace(`/${fileName}`, ''));
       const destFile = path.join(destPath, fileName)
-      
+
       // create folders that dont exists
       try {
         await statAsync(destPath);
