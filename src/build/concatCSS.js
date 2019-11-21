@@ -7,12 +7,12 @@ const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
 
 
-export default async function ({ rootFolder, distFolder, componentCSSFiles }) {
+export default async function ({ rootFolder, distFolder, filename = 'app.css', componentCSSFiles }) {
   let cssFiles = glob.sync(path.join(rootFolder, '**/*.css')) || [];
   // remove component interal styles
   cssFiles = cssFiles.filter(p => !componentCSSFiles.includes(p));
   const contents = await Promise.all(cssFiles.map(p => readFileAsync(p)));
-  const writePath = path.join(distFolder, 'app.css');
+  const writePath = path.join(distFolder, filename);
   await writeFileAsync(writePath, contents.map(p => p.toString()).join('\n'));
   return writePath.replace(distFolder, '');
 }
