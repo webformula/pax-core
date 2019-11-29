@@ -15,7 +15,7 @@ export default async function ({ rootFolder, distFolder, pagesFolder, layoutFile
   const packagejson = await readFileAsync('./package.json');
   const dependencies = JSON.parse(packagejson).dependencies;
   const ignore = [];
-  if (layoutFilePath) ignore.push(layoutFilePath);
+  if (layoutFilePath) ignore.push(`${rootFolder}/${layoutFilePath}`);
   const jsfiles = glob.sync(path.join(rootFolder, '**/*.js'), { ignore }) || [];
   const files = await Promise.all(jsfiles.map(p => categorizeFile(p, rootFolder, distFolder)));
   const importSourcePaths = getImportSourcePaths(files);

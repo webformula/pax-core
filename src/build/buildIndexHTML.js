@@ -11,7 +11,7 @@ const writeFileAsync = promisify(fs.writeFile);
 
 
 export default async function ({ rootFolder, distFolder, pagesFolder, layoutFilePath, routerConfig, serviceWorker, cacheBust = false }) {
-  const layout = layoutFilePath !== undefined ? (await import(path.join(process.cwd(), layoutFilePath))).default : defaultLayout;
+  const layout = layoutFilePath !== undefined ? (await import(path.join(process.cwd(), rootFolder, layoutFilePath))).default : defaultLayout;
   const head = buildHead({ serviceWorker, cacheBust });
   const { body, title } = await renderRootPage({ routerConfig, rootFolder, pagesFolder });
   const content = layout({ head, title, body });
