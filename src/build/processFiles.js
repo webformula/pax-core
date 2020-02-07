@@ -76,7 +76,9 @@ function processFile(file, customHTMLElementExtendedName, dependencies) {
 
     // rename HTMLElementExtended
     if (customHTMLElementExtendedName !== undefined) {
-      file.fileStr = file.fileStr.replace(/HTMLElementExtended\s/g, customHTMLElementExtendedName.replace('.js', ' '));
+      file.fileStr = file.fileStr
+        .replace(/HTMLElementExtended\s/g, customHTMLElementExtendedName.replace('.js', ' '))
+        .replace(/HTMLElementExtended,/g, `${customHTMLElementExtendedName.replace('.js', ' ')},`);
     }
   });
 

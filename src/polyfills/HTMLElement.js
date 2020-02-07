@@ -6,6 +6,7 @@
 class BaseHTMLElement {
   constructor() {
     this.style = {};
+    this.__isBuildProcess = true;
   }
 
   get classList() {

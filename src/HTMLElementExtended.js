@@ -1,5 +1,5 @@
 export default class HTMLElementExtended extends HTMLElement {
-  constructor(name) {
+  constructor() {
     super();
   }
 
@@ -9,13 +9,32 @@ export default class HTMLElementExtended extends HTMLElement {
   cloneTemplate(rerender) {
     const template = document.getElementById(`${this.nodeName.toLowerCase()}--template`);
     const templateContent = template.content;
-    const shadowRoot = this.shadowRoot ? this.shadowRoot : this.attachShadow({mode: 'open'});
+    const shadowRoot = this.shadowRoot ? this.shadowRoot : this.attachShadow({ mode: 'open' });
     const clone = templateContent.cloneNode(true);
-    if (rerender) clone.querySelector('render-block').innerHTML = this.template();
+    
+    if (rerender) {
+      // this.__isBuildProcess is present during the build process and will be undefined in the browser
+      if (!this.__isBuildProcess && this.beforeRender) this.beforeRender();
+      clone.querySelector('render-block').innerHTML = this.template();
+    }
+
     shadowRoot.appendChild(clone);
+    if (!this.__isBuildProcess && this.afterRender) this.afterRender();
+
+  }
+
+  connectedCallback() {
+    if (!this.__isBuildProcess && this.addEvents) this.addEvents();
+  }
+
+  disconnectedCallback() {
+    if (!this.__isBuildProcess && this.removeEvents) this.removeEvents();
   }
 
   render() {
+    // this.__isBuildProcess is present during the build process and will be undefined in the browser
+    if (this.__isBuildProcess) return;
+
     const renderBlock = this.shadowRoot.querySelector('render-block');
     if (!renderBlock) throw Error('Could not find <render-block>');
 
@@ -28,26 +47,26 @@ export default class HTMLElementExtended extends HTMLElement {
 
   // Called before render(). placeholder, can be overidden
   // This does not include the initial cloneNode
-  beforeRender() {}
+  beforeRender() { }
 
   // Called after render(). placeholder, can be overidden
   // This does not include the initial cloneNode
-  afterRender() {}
+  afterRender() { }
 
   // this is called when the component is connected
   // This is also called after render, events are first remoed before render so you dont have multiple events
-  addEvents() {}
+  addEvents() { }
 
   // this is called when the component is disconnected
   // This is also called prior to render, after render addEvents is called. This will make sure you old elements dont retain events
-  removeEvents() {}
+  removeEvents() { }
 
   // add css that will be injected to the template
-  styles() {}
+  styles() { }
 
   // add css to the document root
-  externalStyles() {}
+  externalStyles() { }
 
   // add html template, This will be used to create the template and direct render
-  template() {}
+  template() { }
 }

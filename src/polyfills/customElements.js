@@ -1,6 +1,7 @@
 const customElements = new class {
   constructor() {
     this.components = {};
+    this.__isBuildProcess = true;
   }
 
   define(name, constructor) {
