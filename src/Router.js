@@ -21,12 +21,6 @@ export default class Router {
     });
   }
 
-  showPage() {
-    if (this.pageShowing) return;
-    this.pageShowing = true;
-    document.querySelector('render-block-page').classList.remove('hide-page-on-load');
-  }
-
   add(path, pageLocation) {
     if (this.routes[path]) throw Error(`Path already exists: ${path}`);
     this.routes[path] = pageLocation;
@@ -113,31 +107,66 @@ export default class Router {
 
   // change and render page
   _changePage(className) {
-    // disconnect current page before rendering next one
-    window.currentPageClass.disconnectedCallback();
-    window.currentPageClass._disableRender = true;
+    this._prepCurrentPageFormTransition();
 
+    this._buildNextPage();
+
+    this._transition();
+
+
+    // figure out scrolling
+    // const renderBlock = document.querySelector('render-block-page');
+    // // this covers desktop
+    // renderBlock.parentNode.scrollTop = 0;
+    // // this covers mobile
+    // document.documentElement.scrollTop = 0;
+  }
+
+  _prepCurrentPageFormTransition() {
+    // we are going to add a sedond render block so we need to be able to tell the difference
+    const renderBlock = document.querySelector('render-block-page');
+    renderBlock.classList.add('previous');
+
+    const currentPage = window.currentPageClass
+    // disconnect current page before rendering next one
+    currentPage.disconnectedCallback();
+    currentPage._disableRender = true;
+
+    const id = '$' + currentPage.constructor.name; // page var name ( $Name.somefunc() )
+    window[id] = undefined;
+  }
+
+  _buildNextPage(className) {
+    // --- handle class ---
+    
     // try uppercassing the first letter to follow class standards
     if (!window[className]) className = className.charAt(0).toUpperCase() + className.slice(1);
 
-    const instance = eval('new ' + className + '()');
-    const id = '$'+instance.constructor.name; // page var name ( $Name.somefunc() )
+    const instance = eval(`new ${className}()`);
+    const id = '$' + instance.constructor.name; // page var name ( $Name.somefunc() )
     window[id] = instance;
     window.activePage = instance;
     window.currentPageClass = instance;
     window.currentPageClass._disableRender = false;
+
+    const currentRenderBlock = document.querySelector('render-block-page');
+    const nextRenderBlock = document.createElement('render-block-page');
+    nextRenderBlock.classList.add = 'hide-page-on-load';
+    // the render method will find the render-block-page element
     window[id].render();
-    const renderBlock = document.querySelector('render-block-page');
-    // this covers desktop
-    renderBlock.parentNode.scrollTop = 0;
-    // this covers mobile
-    document.documentElement.scrollTop = 0;
+
+    currentRenderBlock.insertAdjacentElement('afterend', nextRenderBlock);
+
     const pageTitle = document.querySelector('title');
-    if (pageTitle) pageTitle.innerText = window[id].title;
+    if (pageTitle) pageTitle.innerText = instance.title;
+
     setTimeout(() => {
       if (window[id].connectedCallback) window[id].connectedCallback();
     }, 0);
-    this.showPage();
+  }
+
+  _transition() {
+    document.createElementNS('render-block-page:not(.previous)').classList.remove('hide-page-on-load');
   }
 
   _clean(str) {

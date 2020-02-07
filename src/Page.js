@@ -13,7 +13,7 @@ export default class Page {
   render() {
     if (this._disableRender === true) return;
 
-    const renderBlock = document.querySelector('render-block-page');
+    const renderBlock = document.querySelector('render-block-page:not(.previous)');
     if (!renderBlock) throw Error('Could not find <render-block-page>');
 
     if (this.beforeRender) this.beforeRender();
@@ -34,8 +34,8 @@ export default class Page {
       sibling = node.firstChild;
       while (sibling) {
     		if (sibling.nodeType === 1 && sibling !== directPatent) {
-    			if (reverse) sibling.classList.remove('mdw-hide-other-than-page-content');
-          else sibling.classList.add('mdw-hide-other-than-page-content');
+    			if (reverse) sibling.classList.remove('hide-other-than-page-content');
+          else sibling.classList.add('hide-other-than-page-content');
     		}
     		sibling = sibling.nextSibling
     	}
