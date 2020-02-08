@@ -27,8 +27,43 @@ function buildHead({ serviceWorker, cacheBust }) {
     <script type="module" src="entry.js${cacheBust ? `?${Date.now()}` : ''}"></script>
 
     <style>
+      .transition-block-page {
+        display: flex;
+      }
+
+      .transition-block-page.in-transition {
+        overflow-x: hidden;
+      }
+
+      render-block-page {
+        width: 100%;
+        flex-shrink: 0;
+        opacity: 1;
+      }
+
       render-block-page.previous {
         pointer-events: none;
+        user-select: none;
+      }
+
+      render-block-page.next {
+        transform: scale(0.9) translateX(-100%);
+        opacity: 0;
+      }
+
+      render-block-page.previous.animate-transition {
+        transform: scale(0.9);
+        opacity: 0;
+        transition: opacity .16s linear,
+                    transform .26s cubic-bezier(0,0,.2,1);
+      }
+
+      render-block-page.next.animate-transition {
+        transform: scale(1) translateX(-100%);
+        transform-origin: -50% 0;
+        opacity: 1;
+        transition: opacity .18s linear,
+                    transform .26s cubic-bezier(0,0,.2,1);
       }
 
       .hide-page-on-load {
@@ -67,7 +102,7 @@ async function renderRootPage({ routerConfig, rootFolder, pagesFolder }) {
 function buildTemplate(instance) {
   return html`
     <div class="transition-block-page">
-      <render-block-page class="hide-page-on-load">
+      <render-block-page class="hide-page-on-load initial-page">
         ${instance ? instance.template() : ''}
       </render-block-page>
     </div>

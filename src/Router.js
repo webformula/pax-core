@@ -79,6 +79,10 @@ export default class Router {
     return this.getUrlParameters()[name];
   }
 
+  showPage() {
+    document.querySelector('render-block-page:not(.previous)').classList.remove('hide-page-on-load');
+  }
+
 
   // --- private ---
 
@@ -108,10 +112,11 @@ export default class Router {
   // change and render page
   _changePage(className) {
     this._prepCurrentPageFormTransition();
+    this._buildNextPage(className);
 
-    this._buildNextPage();
-
-    this._transition();
+    requestAnimationFrame(() => {
+      this._transition();
+    });
 
 
     // figure out scrolling
@@ -125,6 +130,12 @@ export default class Router {
   _prepCurrentPageFormTransition() {
     // we are going to add a sedond render block so we need to be able to tell the difference
     const renderBlock = document.querySelector('render-block-page');
+
+    // handle initial page
+    if (renderBlock.classList.contains('initial-page')) {
+      renderBlock.classList.remove('initial-page')
+      return;
+    }
     renderBlock.classList.add('previous');
 
     const currentPage = window.currentPageClass
@@ -150,12 +161,17 @@ export default class Router {
     window.currentPageClass._disableRender = false;
 
     const currentRenderBlock = document.querySelector('render-block-page');
-    const nextRenderBlock = document.createElement('render-block-page');
-    nextRenderBlock.classList.add = 'hide-page-on-load';
-    // the render method will find the render-block-page element
-    window[id].render();
+    let nextRenderBlock;
+    // create new render block
+    if (currentRenderBlock.classList.contains('previous')) {
+       nextRenderBlock = document.createElement('render-block-page');
+      // nextRenderBlock.classList.add('hide-page-on-load');
+      nextRenderBlock.classList.add('next');
+      // the render method will find the render-block-page element
+      currentRenderBlock.insertAdjacentElement('afterend', nextRenderBlock);
+    }
 
-    currentRenderBlock.insertAdjacentElement('afterend', nextRenderBlock);
+    window[id].render();
 
     const pageTitle = document.querySelector('title');
     if (pageTitle) pageTitle.innerText = instance.title;
@@ -166,7 +182,47 @@ export default class Router {
   }
 
   _transition() {
-    document.createElementNS('render-block-page:not(.previous)').classList.remove('hide-page-on-load');
+    const transitionBlockPage = document.querySelector('.transition-block-page ');
+    if (transitionBlockPage) transitionBlockPage.classList.add('in-transition');
+    const previousRenderBlock = document.querySelector('render-block-page.previous');
+    const nextRenderBlock = document.querySelector('render-block-page:not(.previous)');
+
+    if (previousRenderBlock) previousRenderBlock.classList.add('animate-transition');
+    nextRenderBlock.classList.add('animate-transition');
+    this.showPage();
+
+    let complete = false;
+    const self = this;
+
+    function transitionComplete() {
+      if (!complete) return complete = true;
+      console.log('sdfsdf');
+
+      previousRenderBlock.removeEventListener('transitionend', transitionComplete);
+      nextRenderBlock.removeEventListener('transitionend', transitionComplete);
+      self._onTransitionComplete();
+    }
+
+    if (previousRenderBlock) {
+      previousRenderBlock.addEventListener('transitionend', transitionComplete);
+      nextRenderBlock.addEventListener('transitionend', transitionComplete);
+    } else {
+      this._onTransitionComplete();
+    }
+  }
+
+  _onTransitionComplete() {
+    console.log('_onTransitionComplete');
+
+    const previousRenderBlock = document.querySelector('render-block-page.previous');
+    if (previousRenderBlock) previousRenderBlock.remove();
+
+    const nextRenderBlock = document.querySelector('render-block-page:not(.previous)');
+    nextRenderBlock.classList.remove('next');
+    nextRenderBlock.classList.remove('animate-transition');
+
+    const transitionBlockPage = document.querySelector('.transition-block-page');
+    if (transitionBlockPage) transitionBlockPage.classList.remove('in-transition');
   }
 
   _clean(str) {
