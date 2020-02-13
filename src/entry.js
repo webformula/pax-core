@@ -1,11 +1,11 @@
 import Page from './client/Page.js';
-import { Router } from './client/Router.js';
+import router from './client/router.js';
 import HTMLElementExtended from './client/HTMLElementExtended.js';
 import { html, css } from './client/tags.js';
 
 export {
   Page,
-  Router,
+  router,
   HTMLElementExtended,
   html,
   css

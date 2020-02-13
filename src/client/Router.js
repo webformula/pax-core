@@ -1,4 +1,5 @@
-export class Router {
+// TODO make sure initial pages do not render an extra time
+export default new class {
   constructor() {
     this.routes = {};
     this.classReference = {};
@@ -13,7 +14,8 @@ export class Router {
     this.FOLLOWED_BY_SLASH_REGEXP = '(?:\/$|$)';
     this.MATCH_REGEXP_FLAGS = '';
 
-    if (this.path === '' || this.path === '/') this.showPage();
+    this._transitionPages = false;
+    this.bound_onTransitionComplete = this._onTransitionComplete.bind(this);
   }
 
   init() {
@@ -24,36 +26,12 @@ export class Router {
     });
   }
 
-  addGlobalString(path, pageLocation) {
-    if (this.routes[path]) throw Error(`Path already exists: ${path}`);
-    this.routes[path] = pageLocation;
+  get transitionPages() {
+    return this._transitionPages;
   }
 
-  addClass(Class, defaultPath) {
-    const classMatch = this.pageClassnameRegex.exec(Class);
-    const className = classMatch ? classMatch[1] : defaultPath.split('/').pop().replace('.js', '');
-
-    if (defaultPath) {
-      if (this.routes[defaultPath]) throw Error(`Path already exists: ${defaultPath}`);
-      this.classReference[className] = Class;
-      this.routes[defaultPath] = className;
-    }
-
-    (Class.routes || []).forEach(path => {
-      if (defaultPath === path) return;
-      if (this.routes[path]) throw Error(`Path already exists: ${path}`);
-      this.classReference[className] = Class;
-      this.routes[path] = className;
-    });
-  }
-
-  setRoot(pageLocation) {
-    if (this.routes['/']) throw Error('Path already exists: /');
-    this.routes['/'] = pageLocation;
-  }
-
-  set404(pageLocation) {
-    this._notFoundRoute = pageLocation;
+  set transitionPages(value) {
+    this._transitionPages = !!value;
   }
 
   get path() {
@@ -63,208 +41,214 @@ export class Router {
     return path;
   }
 
-  get current() {
-    return this._clean(window.location.href);
+  get urlParameters() {
+    const match = this._match(this.path);
+    return match ? match.params : {};
   }
 
-  getQueryParameters() {
-    return this._extractGETParameters(this.current).split(',').filter(a => !!a).reduce((a, b) => {
+  get searchParamters() {
+    return this._extractSearchParameters(this._clean(window.location.href)).split(',').filter(a => !!a).reduce((a, b) => {
       const split = b.split('=');
       a[split[0]] = split[1];
       return a;
     }, {});
   }
 
-  getQueryParameter(name) {
-    return this.getQueryParameters()[name];
-  }
+  addTransitionCSS() {
+    document.body.insertAdjacentHTML('beforebegin', `<style>
+      page-container {
+        display: flex;
+      }
 
-  addQueryParameter(name, value) {
-    const parameters = this.getQueryParameters();
-    parameters[name] = value;
-    window.location.href = window.location.href.split('?')[0] + '?' + Object.keys(parameters).map(key => `${key}=${parameters[key]}`).join(',');
-  }
+      page-container.in-transition {
+        overflow-x: hidden;
+      }
 
-  getUrlParameters(parseStringOrRegex) {
-    if (!parseStringOrRegex) {
-      const match = this._match(this.path);
-      if (!match) return {};
-      return match.params || {};
+      page-render-block {
+        width: 100%;
+        flex-shrink: 0;
+        opacity: 1;
+      }
+
+      page-render-block.before-transition-page-out {
+        pointer-events: none;
+        user-select: none;
+      }
+
+      page-render-block.before-transition-page-in {
+        transform: scale(0.9) translateX(-100%);
+        opacity: 0;
+      }
+
+      page-render-block.transition-page-out {
+        transform: scale(0.9);
+        opacity: 0;
+        transition: opacity .16s linear,
+                    transform .26s cubic-bezier(0,0,.2,1);
+      }
+
+      page-render-block.transition-page-in {
+        transform: scale(1) translateX(-100%);
+        transform-origin: -50% 0;
+        opacity: 1;
+        transition: opacity .18s linear,
+                    transform .26s cubic-bezier(0,0,.2,1);
+      }
+    </style>`);
+  }
+  
+  addClass(Class, optionalPath) {
+    const classMatch = this.pageClassnameRegex.exec(Class);
+    const className = classMatch ? classMatch[1] : optionalPath.split('/').pop().replace('.js', '');
+
+    // handle optional path
+    if (optionalPath) {
+      if (this.routes[optionalPath]) throw Error(`Path already exists: ${optionalPath}`);
+      this.classReference[className] = Class;
+      this.routes[optionalPath] = className;
     }
-    const { regexp, paramNames } = this._replaceDynamicURLParts(parseStringOrRegex);
-    const match = this.path.replace(/^\/+/, '/').match(regexp);
-    return this._regExpResultToParams(match, paramNames);
+
+    // add routes from page class
+    (Class.routes || []).forEach(path => {
+      if (optionalPath === path) return;
+      if (this.routes[path]) throw Error(`Path already exists: ${path}`);
+      this.classReference[className] = Class;
+      this.routes[path] = className;
+    });
   }
 
-  getUrlParameter(name) {
-    return this.getUrlParameters()[name];
-  }
-
-  showPage() {
-    document.querySelector('page-render-block:not(.previous)').classList.remove('hide-page-on-load');
+  set404({ Class }) {
+    if (Class) this._notFoundRouteClass = Class;
   }
 
 
   // --- private ---
 
-  // resolve path and update page
   _resolve(event, initial = false) {
-    // prevent page looping
-    if (initial === false && event.oldURL === event.newURL);
+    // no change
+    if (initial === false && event.oldURL === event.newURL) return;
 
     const path = this.path;
     const match = this._match(path);
 
-    if (match === false) {
-      if (this._notFoundRoute) return this._changePage(this._notFoundRoute);
-      else return console.warn('no page found and default not found page setup');
+    if (!match) {
+      if (this._notFoundRouteClass) return this._changePage(this._notFoundRouteClass);
+      else return console.warn('no page found and no default not found page setup');
     }
 
     let url = path;
-    let GETParameters = this._extractGETParameters(this.current);
+    if (initial && this._pageIsPreRendered()) return;
+
+    // TODO
+    let GETParameters = this._extractSearchParameters(this._clean(window.location.href));
     if (GETParameters) url += `?${GETParameters}`;
     window.location.hash = url;
 
-    // prevent page from loading home on initial render
-    if (initial && url === '/' && this._pageIsPreRendered()) return;
+    // prevent page change when no difference exists
+    // this will cover the case of adding the #/ to the url
+    if (event) {
+      const urlDiff = event.oldURL.length > event.newURL.length ? event.oldURL.replace(event.newURL, '') : event.newURL.replace(event.oldURL, '');
+      if (urlDiff === '' || urlDiff === '#/') return
+    }
+
+    // prevent page from loading on initial render
     return this._changePage(match);
   }
 
-  // change and render page
-  _changePage({ className, Class }) {
-    this._prepCurrentPageFormTransition();
-    this._buildNextPage({ className, Class });
+  _changePage({ Class }) {
+    if (!Class) throw Error('no class found');
 
-    requestAnimationFrame(() => {
-      this._transition();
-    });
+    const pageContainer = document.querySelector('page-container');
+    if (!pageContainer) throw Error('<page-container> required for router to work');
+
+    const renderBlock = document.querySelector('page-render-block');
+
+    // --- inital page ---
+    // A page can have no pre-rendered pages.
+    // create render-block and render page immidiatly
+    if (!renderBlock) {
+      pageContainer.appendChild(document.createElement('page-render-block'));
+
+      // create page class instance
+      window.activePage = new Class();
+      window.activePage.render();
+
+      return;
+    }
+    
+    // --- no transiton ---
+    // change page immideatly if transitions are not on
+    if (!this._transitionPages) {
+      window.activePage.disconnectedCallback();
+      // create page class instance
+      window.activePage = new Class();
+      window.activePage.render();
+
+      setTimeout(() => {
+        if (window.activePage.connectedCallback) window.activePage.connectedCallback();
+      }, 0);
+      return;
+    }
 
 
-    // figure out scrolling
-    // const renderBlock = document.querySelector('page-render-block');
-    // // this covers desktop
-    // renderBlock.parentNode.scrollTop = 0;
-    // // this covers mobile
-    // document.documentElement.scrollTop = 0;
+    //--- transiton ---
+
+    // prep for current page transition out
+    renderBlock.classList.add('before-transition-page-out');
+    window.activePage._disableRender = true;
+    window.activePage.disconnectedCallback();
+
+    // build next page and prep for transition
+    const nextRenderBlock = document.createElement('page-render-block');
+    nextRenderBlock.classList.add('before-transition-page-in');
+    renderBlock.insertAdjacentElement('afterend', nextRenderBlock);
+
+    const pageInstance = new Class();
+    window.activePage = pageInstance;
+    pageInstance.render();
+
+    const pageTitle = document.querySelector('title');
+    if (pageTitle) pageTitle.innerText = pageInstance.title;
+
+    // TODO
+    // can i use requestAnimationFrame?
+    // should i call this after transition
+    setTimeout(() => {
+      if (pageInstance.connectedCallback) pageInstance.connectedCallback();
+    }, 0);
+
+    // --- transition ---
+    pageContainer.classList.add('in-transition');
+
+    // CONTINUE
+    renderBlock.classList.add('transition-page-out');
+    nextRenderBlock.classList.add('transition-page-in');
+
+    renderBlock.addEventListener('transitionend', this.bound_onTransitionComplete);
+    nextRenderBlock.addEventListener('transitionend', this.bound_onTransitionComplete);
   }
+
+  _onTransitionComplete({ target }) {
+    target.removeEventListener('transitionend', this.bound_onTransitionComplete);
+    // remove old page
+    if (target.classList.contains('transition-page-out')) target.remove();
+    // remove animation state from new page
+    else {
+      target.classList.remove('before-transition-page-in');
+      target.classList.remove('transition-page-in');
+    }
+
+    // remove transition state from page container
+    if (!document.querySelector('page-render-block.previous') && !document.querySelector('page-render-block.next')) {
+      document.querySelector('page-container').classList.remove('in-transition');
+    }
+  }
+  
 
   _pageIsPreRendered() {
     const renderBlock = document.querySelector('page-render-block');
-    if (renderBlock.children.length > 0) return true;
+    if (renderBlock && renderBlock.children.length > 0) return true;
     return false;
-  }
-
-  _isInitailPage() {
-    const renderBlock = document.querySelector('page-render-block');
-    if (renderBlock.classList.contains('initial-page')) return true;
-    if (!renderBlock.classList.contains('loaded-page')) return true;
-    if (renderBlock.children.length = 0) return true;
-    return false;
-  }
-
-  _prepCurrentPageFormTransition() {
-    // we are going to add a sedond render block so we need to be able to tell the difference
-    const renderBlock = document.querySelector('page-render-block');
-
-    // handle initial page
-    if (this._isInitailPage()) {
-      renderBlock.classList.remove('initial-page')
-      return;
-    }
-    renderBlock.classList.add('previous');
-
-    const currentPage = window.currentPageClass
-    // disconnect current page before rendering next one
-    currentPage.disconnectedCallback();
-    currentPage._disableRender = true;
-
-    const id = '$' + currentPage.constructor.name; // page var name ( $Name.somefunc() )
-    window[id] = undefined;
-  }
-
-  _buildNextPage({ className, Class }) {
-    // --- handle class ---
-
-    let instance;
-    if (className) {
-      if (this.classReference[className]) instance = new this.classReference[className]();
-      else if (window[className]) instance = eval(`new ${window[className]}()`);
-      else {
-        // try uppercassing the first letter to follow class standards
-        className = className.charAt(0).toUpperCase() + className.slice(1);
-        if (window[className]) instance = eval(`new ${window[className]}()`);
-        else if (this.classReference[className]) instance = new this.classReference[className]();
-      }
-    } else {
-      instance = new Class();
-    }
-
-    const id = '$' + instance.constructor.name; // page var name ( $Name.somefunc() )
-    window[id] = instance;
-    window.activePage = instance;
-    window.currentPageClass = instance;
-    window.currentPageClass._disableRender = false;
-
-    const currentRenderBlock = document.querySelector('page-render-block');
-    let nextRenderBlock;
-    // create new render block
-    if (currentRenderBlock.classList.contains('previous')) {
-      nextRenderBlock = document.createElement('page-render-block');
-      // nextRenderBlock.classList.add('hide-page-on-load');
-      nextRenderBlock.classList.add('next');
-      // the render method will find the page-render-block element
-      currentRenderBlock.insertAdjacentElement('afterend', nextRenderBlock);
-    }
-
-    window[id].render();
-
-    const pageTitle = document.querySelector('title');
-    if (pageTitle) pageTitle.innerText = instance.title;
-
-    setTimeout(() => {
-      if (window[id].connectedCallback) window[id].connectedCallback();
-    }, 0);
-  }
-
-  _transition() {
-    const transitionBlockPage = document.querySelector('.transition-block-page ');
-    if (transitionBlockPage) transitionBlockPage.classList.add('in-transition');
-    const previousRenderBlock = document.querySelector('page-render-block.previous');
-    const nextRenderBlock = document.querySelector('page-render-block:not(.previous)');
-
-    if (previousRenderBlock) previousRenderBlock.classList.add('animate-transition');
-    nextRenderBlock.classList.add('animate-transition');
-    this.showPage();
-
-    let complete = false;
-    const self = this;
-
-    function transitionComplete() {
-      if (!complete) return complete = true;
-      
-      previousRenderBlock.removeEventListener('transitionend', transitionComplete);
-      nextRenderBlock.removeEventListener('transitionend', transitionComplete);
-      self._onTransitionComplete();
-    }
-
-    if (previousRenderBlock) {
-      previousRenderBlock.addEventListener('transitionend', transitionComplete);
-      nextRenderBlock.addEventListener('transitionend', transitionComplete);
-    } else {
-      this._onTransitionComplete();
-    }
-  }
-
-  _onTransitionComplete() {
-    const previousRenderBlock = document.querySelector('page-render-block.previous');
-    if (previousRenderBlock) previousRenderBlock.remove();
-
-    const nextRenderBlock = document.querySelector('page-render-block:not(.previous)');
-    nextRenderBlock.classList.remove('next');
-    nextRenderBlock.classList.remove('animate-transition');
-
-    const transitionBlockPage = document.querySelector('.transition-block-page');
-    if (transitionBlockPage) transitionBlockPage.classList.remove('in-transition');
   }
 
   _clean(str) {
@@ -272,12 +256,16 @@ export class Router {
     return str.replace(/\/+$/, '').replace(/^\/+/, '/');
   }
 
-  _extractGETParameters(url) {
+  _extractSearchParameters(url) {
     return url.split(/\?(.*)?$/).slice(1).join('');
   }
 
-  _match(url) {
-    let matched = this._findMatchedRoutes(url);
+
+
+  // --- matching ---
+
+  _match(path) {
+    let matched = this._findMatchedRoutes(path);
     if (!matched.length) return false;
     else if (matched.length === 1) return matched[0];
     else {
@@ -289,18 +277,19 @@ export class Router {
   }
 
   _findMatchedRoutes(url) {
-    return Object.keys(this.routes)
-      .map(route => {
+    return Object.entries(this.routes)
+      .map(([route, className]) => {
         const { regexp, paramNames } = this._replaceDynamicURLParts(this._clean(route));
         const match = url.replace(/^\/+/, '/').match(regexp);
         const params = this._regExpResultToParams(match, paramNames);
-        const isString = typeof this.routes[route] === 'string';
+        const Class = this.classReference[className];
 
         return !match ? false : {
           match,
           route,
           params,
-          [isString ? 'className' : 'Class']: this.routes[route]
+          className,
+          Class
         };
       })
       .filter(m => m && m.match[0] !== '');

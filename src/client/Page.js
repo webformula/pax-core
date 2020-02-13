@@ -29,7 +29,6 @@ export default class Page {
     static CreateAndSet() {
       const instance = new this();
       window.activePage = instance;
-      instance._disableRender = false;
 
       const pageTitle = document.querySelector('title');
       if (pageTitle) pageTitle.innerText = instance.title;
