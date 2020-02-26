@@ -1,16 +1,5 @@
 export default class Page {
     constructor() {
-        // Can this work?
-        // const renderBlock = document.querySelector('page-render-block');
-        // this.__mutationObserver = new MutationObserver(() => {
-        //     if ([this, ...this.parentNodes].some(el => el.nextSibling) || document.readyState !== 'loading') {
-        //         this.childrenAvailableCallback()
-        //         this.mutationObserver.disconnect()
-        //     }
-        // });
-
-        // this.__mutationObserver.observe(this, { childList: true });
-
       if (globalThis.displayPageContentOnly) this.displayPageContentOnly(true);
     }
 

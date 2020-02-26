@@ -1,4 +1,3 @@
-// TODO make sure initial pages do not render an extra time
 export default new class {
   constructor() {
     this.routes = {};
@@ -16,6 +15,11 @@ export default new class {
 
     this._transitionPages = false;
     this.bound_onTransitionComplete = this._onTransitionComplete.bind(this);
+
+    this.__mutationObserver = new MutationObserver(() => {
+      if (window.activePage.connectedCallback) window.activePage.connectedCallback();
+      this._stopWatchingForConnect();
+    });
   }
 
   init() {
@@ -59,34 +63,28 @@ export default new class {
       page-container {
         display: flex;
       }
-
       page-container.in-transition {
         overflow-x: hidden;
       }
-
       page-render-block {
         width: 100%;
         flex-shrink: 0;
         opacity: 1;
       }
-
       page-render-block.before-transition-page-out {
         pointer-events: none;
         user-select: none;
       }
-
       page-render-block.before-transition-page-in {
         transform: scale(0.9) translateX(-100%);
         opacity: 0;
       }
-
       page-render-block.transition-page-out {
         transform: scale(0.9);
         opacity: 0;
         transition: opacity .16s linear,
                     transform .26s cubic-bezier(0,0,.2,1);
       }
-
       page-render-block.transition-page-in {
         transform: scale(1) translateX(-100%);
         transform-origin: -50% 0;
@@ -97,16 +95,12 @@ export default new class {
     </style>`);
   }
   
-  addClass(Class, optionalPath) {
-    const classMatch = this.pageClassnameRegex.exec(Class);
-    const className = classMatch ? classMatch[1] : optionalPath.split('/').pop().replace('.js', '');
+  // you can configure routes directly in the Page class
+  addPageClass(Class, optionalPath) {
+    const className = this.getClassName(Class, optionalPath);
 
     // handle optional path
-    if (optionalPath) {
-      if (this.routes[optionalPath]) throw Error(`Path already exists: ${optionalPath}`);
-      this.classReference[className] = Class;
-      this.routes[optionalPath] = className;
-    }
+    if (optionalPath) this.addPageClassPath(Class, optionalPath);
 
     // add routes from page class
     (Class.routes || []).forEach(path => {
@@ -115,6 +109,28 @@ export default new class {
       this.classReference[className] = Class;
       this.routes[path] = className;
     });
+  }
+
+  addPageClassPath(Class, path) {
+    const className = this.getClassName(Class, path);
+    if (this.routes[path]) throw Error(`Path already exists: ${optionalPath}`);
+    this.classReference[className] = Class;
+    this.routes[path] = className;
+  }
+
+  getClassName(Class, path) {
+    const classMatch = this.pageClassnameRegex.exec(Class);
+    return classMatch ? classMatch[1] : path.split('/').pop().replace('.js', '');
+  }
+
+  setRoot(className) {
+    if (this.routes[className]) {
+      const Class = this.classReference[this.routes[className]];
+      this.addPageClassPath(Class, '/');
+    } else {
+      // className is actually class in this case
+      this.addPageClassPath(className, '/');
+    }
   }
 
   set404({ Class }) {
@@ -139,7 +155,6 @@ export default new class {
     let url = path;
     if (initial && this._pageIsPreRendered()) return;
 
-    // TODO
     let GETParameters = this._extractSearchParameters(this._clean(window.location.href));
     if (GETParameters) url += `?${GETParameters}`;
     window.location.hash = url;
@@ -155,11 +170,23 @@ export default new class {
     return this._changePage(match);
   }
 
+  _watchForConnect() {
+    const renderBlock = document.querySelector('page-render-block:not(.previous)');
+    this.__mutationObserver.observe(renderBlock, { childList: true });
+  }
+
+  _stopWatchingForConnect() {
+    this.__mutationObserver.disconnect();
+  }
+
   _changePage({ Class }) {
     if (!Class) throw Error('no class found');
 
     const pageContainer = document.querySelector('page-container');
     if (!pageContainer) throw Error('<page-container> required for router to work');
+
+    //
+    this._stopWatchingForConnect();
 
     const renderBlock = document.querySelector('page-render-block');
 
@@ -171,6 +198,7 @@ export default new class {
 
       // create page class instance
       window.activePage = new Class();
+      this._watchForConnect();
       window.activePage.render();
 
       return;
@@ -180,13 +208,11 @@ export default new class {
     // change page immideatly if transitions are not on
     if (!this._transitionPages) {
       window.activePage.disconnectedCallback();
+
       // create page class instance
       window.activePage = new Class();
+      this._watchForConnect();
       window.activePage.render();
-
-      setTimeout(() => {
-        if (window.activePage.connectedCallback) window.activePage.connectedCallback();
-      }, 0);
       return;
     }
 
@@ -194,6 +220,7 @@ export default new class {
     //--- transiton ---
 
     // prep for current page transition out
+    renderBlock.classList.add('previous');
     renderBlock.classList.add('before-transition-page-out');
     window.activePage._disableRender = true;
     window.activePage.disconnectedCallback();
@@ -205,17 +232,11 @@ export default new class {
 
     const pageInstance = new Class();
     window.activePage = pageInstance;
+    this._watchForConnect();
     pageInstance.render();
 
     const pageTitle = document.querySelector('title');
     if (pageTitle) pageTitle.innerText = pageInstance.title;
-
-    // TODO
-    // can i use requestAnimationFrame?
-    // should i call this after transition
-    setTimeout(() => {
-      if (pageInstance.connectedCallback) pageInstance.connectedCallback();
-    }, 0);
 
     // --- transition ---
     pageContainer.classList.add('in-transition');
