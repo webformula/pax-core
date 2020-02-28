@@ -3,15 +3,23 @@ export default class HTMLElementExtended extends HTMLElement {
     super();
   }
 
+  get _templateId() {
+    return `${this.nodeName.toLowerCase()}--template`;
+  }
+
   /* Clone from pre built htmlTemplate
    *   - Rerender: replaces html but not styles. This is usefull for dynamic templates
    */
   cloneTemplate(rerender) {
-    const template = document.getElementById(`${this.nodeName.toLowerCase()}--template`);
+    let template = document.getElementById(this._templateId);
+    
+    // create template on the fly
+    if (!template) template = this._createTemplate();
+
     const templateContent = template.content;
     const shadowRoot = this.shadowRoot ? this.shadowRoot : this.attachShadow({ mode: 'open' });
     const clone = templateContent.cloneNode(true);
-    
+
     if (rerender) {
       // this.__isBuildProcess is present during the build process and will be undefined in the browser
       if (!this.__isBuildProcess && this.beforeRender) this.beforeRender();
@@ -23,11 +31,28 @@ export default class HTMLElementExtended extends HTMLElement {
 
   }
 
+  _createTemplate() {
+    const templateElement = document.createElement('template');
+    templateElement.setAttribute('id', this._templateId);
+    templateElement.innerHTML = `
+        <style>
+          ${this.styles()}
+        </style>
+        <render-block>
+          ${this.template()}
+        </render-block>
+    `;
+    document.body.insertAdjacentElement('beforeend', templateElement);
+    return templateElement;
+  }
+
   connectedCallback() {
+    // Detect super?
     if (!this.__isBuildProcess && this.addEvents) this.addEvents();
   }
 
   disconnectedCallback() {
+    // Detect super?
     if (!this.__isBuildProcess && this.removeEvents) this.removeEvents();
   }
 
