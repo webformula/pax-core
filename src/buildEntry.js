@@ -24,7 +24,7 @@ async function getPageFiles({ rootFolder, pagesFolder }) {
     .map(async fullPath => {
       const file = await readFileAsync(fullPath)
       const content = file.toString();
-      const prepedPath = fullPath.split(pagesFolder)[1].replace('.js', '').replace(/^\/+/g, '');
+      const prepedPath = fullPath.substring(fullPath.indexOf(pagesFolder) + pagesFolder.length).replace('.js', '').replace(/^\/+/g, '');
       const route = prepedPath.toLowerCase();
       const classMatch = pageClassnameRegex.exec(content);
       const className = classMatch ? classMatch[1] : prepedPath.split('/').pop();

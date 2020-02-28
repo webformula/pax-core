@@ -6,13 +6,13 @@ export default class Page {
     // called once page is renderd
     connectedCallback() {
       // Detect super?
-      if (!this.__isBuildProcess && this.addEvents) this.addEvents();
+      if (this.addEvents) this.addEvents();
     }
 
     // called once page is removed
     disconnectedCallback() {
       // Detect super?
-      if (!this.__isBuildProcess && this.removeEvents) this.removeEvents();
+      if (this.removeEvents) this.removeEvents();
     }
 
     static CreateAndSet() {
