@@ -1,6 +1,7 @@
 export default class Page {
     constructor() {
-      if (globalThis.displayPageContentOnly) this.displayPageContentOnly(true);
+      this.global = typeof globalThis !== 'undefined' ? globalThis : window;
+      if (this.global.displayPageContentOnly) this.displayPageContentOnly(true);
     }
 
     // called once page is renderd
@@ -66,7 +67,7 @@ export default class Page {
           directPatent = node;
       }
 
-      globalThis.displayPageContentOnly = !reverse;
+      this.global.displayPageContentOnly = !reverse;
     }
 
     // Called before render(). placeholder, can be overidden
