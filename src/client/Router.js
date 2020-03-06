@@ -200,7 +200,7 @@ export default new class {
       window.activePage = new Class();
       this._watchForConnect();
       window.activePage.render();
-
+      document.documentElement.scrollTop = 0;
       return;
     }
     
@@ -213,6 +213,7 @@ export default new class {
       window.activePage = new Class();
       this._watchForConnect();
       window.activePage.render();
+      document.documentElement.scrollTop = 0;
       return;
     }
 
