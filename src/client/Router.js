@@ -40,7 +40,7 @@ export default new class {
 
   get path() {
     let path = window.location.hash.replace(/.*#/, '');
-    if (path.includes('?')) path = path.split('?')[0];
+    if (path.indexOf('?') > -1) path = path.split('?')[0];
     if (path.charAt(0) !== '/') path = '/' + path;
     return path;
   }
@@ -142,7 +142,7 @@ export default new class {
 
   _resolve(event, initial = false) {
     // no change
-    if (initial === false && event.oldURL === event.newURL) return;
+    if (initial === false && event.oldURL !== undefined && event.oldURL === event.newURL) return;
 
     const path = this.path;
     const match = this._match(path);
@@ -161,7 +161,7 @@ export default new class {
 
     // prevent page change when no difference exists
     // this will cover the case of adding the #/ to the url
-    if (event) {
+    if (event && event.oldURL !== undefined) {
       const urlDiff = event.oldURL.length > event.newURL.length ? event.oldURL.replace(event.newURL, '') : event.newURL.replace(event.oldURL, '');
       if (urlDiff === '' || urlDiff === '#/') return
     }
@@ -200,7 +200,7 @@ export default new class {
       window.activePage = new Class();
       this._watchForConnect();
       window.activePage.render();
-
+      document.documentElement.scrollTop = 0;
       return;
     }
     
@@ -213,6 +213,7 @@ export default new class {
       window.activePage = new Class();
       this._watchForConnect();
       window.activePage.render();
+      document.documentElement.scrollTop = 0;
       return;
     }
 
@@ -298,8 +299,9 @@ export default new class {
   }
 
   _findMatchedRoutes(url) {
-    return Object.entries(this.routes)
-      .map(([route, className]) => {
+    return Object.keys(this.routes)
+      .map(route => {
+        const className = this.routes[route];
         const { regexp, paramNames } = this._replaceDynamicURLParts(this._clean(route));
         const match = url.replace(/^\/+/, '/').match(regexp);
         const params = this._regExpResultToParams(match, paramNames);

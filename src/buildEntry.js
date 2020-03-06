@@ -8,18 +8,18 @@ const pageClassnameRegex = /export default class\s(.*)\sextends/;
 const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
 
-export default async function build({ rootFolder = app, pagesFolder = 'pages', paxCorePath = '@webformula/pax-core', routerConfig = { root: '', fourOFour: '', custom: [] } }) {  
+export default async function build({ rootFolder = 'app', pagesFolder = 'pages', paxCorePath = '@webformula/pax-core', entryFilePath, routerConfig = { root: '', fourOFour: '' } }) {
+  entryFilePath = entryFilePath || path.join(rootFolder, 'entry.js');
   const [pageFiles, componentFiles] = await Promise.all([
-    await getPageFiles({ rootFolder, pagesFolder }),
-    await getComponentFiles({ rootFolder })
+    await getPageFiles({ rootFolder, pagesFolder, entryFilePath }),
+    await getComponentFiles({ rootFolder, entryFilePath })
   ]);
   
   const entryFileContents = entryTemplate({ pageFiles, routerConfig, componentFiles, paxCorePath });
-  const wPath = path.join(rootFolder, 'entry.js');
-  await writeFileAsync(wPath, entryFileContents);
+  await writeFileAsync(entryFilePath, entryFileContents);
 }
 
-async function getPageFiles({ rootFolder, pagesFolder }) {
+async function getPageFiles({ rootFolder, pagesFolder, entryFilePath }) {
   const pageFilesUnfiltered = await Promise.all((glob.sync(path.join(rootFolder, pagesFolder, '/**/*.js')) || [])
     .map(async fullPath => {
       const file = await readFileAsync(fullPath)
@@ -28,7 +28,7 @@ async function getPageFiles({ rootFolder, pagesFolder }) {
       const route = prepedPath.toLowerCase();
       const classMatch = pageClassnameRegex.exec(content);
       const className = classMatch ? classMatch[1] : prepedPath.split('/').pop();
-      const relativePath = `./${fullPath.replace(rootFolder, '').replace(/^\/+/g, '')}`;
+      const relativePath = `./${path.relative(path.parse(entryFilePath).dir, fullPath)}`;
       return {
         fullPath,
         relativePath,
@@ -41,10 +41,10 @@ async function getPageFiles({ rootFolder, pagesFolder }) {
   return pageFilesUnfiltered.filter(({ content }) => content.includes('extends Page'));
 }
 
-async function getComponentFiles({ rootFolder }) {
+async function getComponentFiles({ rootFolder, entryFilePath }) {
   const filesUnfiltered = await Promise.all((glob.sync(path.join(rootFolder, '/**/*.js')) || [])
     .map(async fullPath => {
-      const relativePath = `./${fullPath.replace(rootFolder, '').replace(/^\/+/g, '')}`;
+      const relativePath = `./${path.relative(path.parse(entryFilePath).dir, fullPath)}`;
       const file = await readFileAsync(fullPath)
       const content = file.toString();
       return {
