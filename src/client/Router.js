@@ -179,6 +179,21 @@ export default new class {
     this.__mutationObserver.disconnect();
   }
 
+  // check all possible scroll elements and reset them
+  resetPageScroll() {
+    const pageContent = document.querySelector('mdw-page mdw-content');
+    if (pageContent && pageContent.scrollTop > 0) pageContent.scrollTop= 0;
+
+    const page = document.querySelector('mdw-page');
+    if (page && page.scrollTop > 0) page.scrollTop = 0;
+
+    const body = document.querySelector('body');
+    if (body.scrollTop > 0) body.scrollTop = 0;
+
+    const documentElement = document.documentElement;
+    if (documentElement.scrollTop > 0) documentElement.scrollTop = 0;
+  }
+
   _changePage({ Class }) {
     if (!Class) throw Error('no class found');
 
@@ -200,7 +215,7 @@ export default new class {
       window.activePage = new Class();
       this._watchForConnect();
       window.activePage.render();
-      document.documentElement.scrollTop = 0;
+      this.resetPageScroll();
       return;
     }
     
@@ -213,7 +228,7 @@ export default new class {
       window.activePage = new Class();
       this._watchForConnect();
       window.activePage.render();
-      document.documentElement.scrollTop = 0;
+      this.resetPageScroll();
       return;
     }
 
