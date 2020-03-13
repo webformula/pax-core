@@ -9,7 +9,7 @@ const readFileAsync = promisify(fs.readFile);
 const writeFileAsync = promisify(fs.writeFile);
 
 export default async function build({ rootFolder = 'app', pagesFolder = 'pages', paxCorePath = '@webformula/pax-core', entryFilePath, routerConfig = { root: '', fourOFour: '' } }) {
-  entryFilePath = entryFilePath || path.join(rootFolder, 'entry.js');
+  entryFilePath = entryFilePath || path.join(rootFolder, 'pax-entry.js');
   const [pageFiles, componentFiles] = await Promise.all([
     await getPageFiles({ rootFolder, pagesFolder, entryFilePath }),
     await getComponentFiles({ rootFolder, entryFilePath })
@@ -68,5 +68,9 @@ ${pageFiles.map(({ className, route }) => `router.addPageClass(${className}, '${
 ${!!routerConfig.root ? `router.setRoot('${routerConfig.root}');` : ''}
 router.init();
 window.router = router;
+
+export {
+  router
+}
   `;
 }
