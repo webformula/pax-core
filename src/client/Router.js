@@ -2,8 +2,10 @@ export default new class {
   constructor() {
     this.routes = {};
     this.classReference = {};
+    this.intercepter = undefined;
 
     this.pageClassnameRegex = /class\s(.*)\sextends/;
+    this.bound_resolve = this._resolve.bind(this);
 
     // regexes for parsing uri's
     this.PARAMETER_REGEXP = /([:*])(\w+)/g;
@@ -24,10 +26,17 @@ export default new class {
 
   init() {
     // browser events for url changes
-    window.addEventListener('hashchange', this._resolve.bind(this));
+    window.addEventListener('hashchange', this.bound_resolve);
     window.addEventListener('DOMContentLoaded', () => {
       this._resolve(undefined, true);
     });
+  }
+
+  // allow intercepting of route changes
+  // return false to prevent route change
+  // return true to allow route change
+  interceptRouteChange(callback) {
+    if (typeof callback === 'function') this.intercepter = callback;
   }
 
   get transitionPages() {
@@ -141,8 +150,22 @@ export default new class {
   // --- private ---
 
   _resolve(event, initial = false) {
+    if (this.ignoreNextPageChange) {
+      this.ignoreNextPageChange = false;
+      return;
+    }
+    const { oldURL, newURL } = event || {};
+
     // no change
-    if (initial === false && event.oldURL !== undefined && event.oldURL === event.newURL) return;
+    if (initial === false && oldURL !== undefined && oldURL === newURL) return;
+    
+    const intercepterValue = this.intercepter ? this.intercepter(newURL, oldURL) : undefined;
+    if (intercepterValue && intercepterValue.then && typeof intercepterValue.then === 'function') console.error('you cannot return a Promise to the router.intercepter callback. Expecting either true or false');
+    if (intercepterValue === false) {
+      this.ignoreNextPageChange = true;
+      window.history.back();
+      return;
+    }
 
     const path = this.path;
     const match = this._match(path);
@@ -157,12 +180,11 @@ export default new class {
 
     let GETParameters = this._extractSearchParameters(this._clean(window.location.href));
     if (GETParameters) url += `?${GETParameters}`;
-    window.location.hash = url;
 
     // prevent page change when no difference exists
     // this will cover the case of adding the #/ to the url
-    if (event && event.oldURL !== undefined) {
-      const urlDiff = event.oldURL.length > event.newURL.length ? event.oldURL.replace(event.newURL, '') : event.newURL.replace(event.oldURL, '');
+    if (oldURL !== undefined) {
+      const urlDiff = oldURL.length > newURL.length ? oldURL.replace(newURL, '') : newURL.replace(oldURL, '');
       if (urlDiff === '' || urlDiff === '#/') return
     }
 
