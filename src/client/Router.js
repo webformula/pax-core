@@ -67,6 +67,13 @@ export default new class {
     }, {});
   }
 
+  setSearchParamter(name, value) {
+    const parameters = this.searchParamters;
+    console.log(parameters);
+    parameters[name] = value;
+    window.location.href = window.location.href.split('?')[0] + '?' + Object.keys(parameters).map(key => `${key}=${parameters[key]}`).join(',');
+  }
+
   addTransitionCSS() {
     document.body.insertAdjacentHTML('beforebegin', `<style>
       page-container {
@@ -103,7 +110,7 @@ export default new class {
       }
     </style>`);
   }
-  
+
   // you can configure routes directly in the Page class
   addPageClass(Class, optionalPath) {
     const className = this.getClassName(Class, optionalPath);
@@ -158,7 +165,7 @@ export default new class {
 
     // no change
     if (initial === false && oldURL !== undefined && oldURL === newURL) return;
-    
+
     const intercepterValue = this.intercepter ? this.intercepter(newURL, oldURL) : undefined;
     if (intercepterValue && intercepterValue.then && typeof intercepterValue.then === 'function') console.error('you cannot return a Promise to the router.intercepter callback. Expecting either true or false');
     if (intercepterValue === false) {
@@ -240,7 +247,7 @@ export default new class {
       this.resetPageScroll();
       return;
     }
-    
+
     // --- no transiton ---
     // change page immideatly if transitions are not on
     if (!this._transitionPages) {
@@ -302,7 +309,7 @@ export default new class {
       document.querySelector('page-container').classList.remove('in-transition');
     }
   }
-  
+
 
   _pageIsPreRendered() {
     const renderBlock = document.querySelector('page-render-block');
