@@ -69,7 +69,6 @@ export default new class {
 
   setSearchParamter(name, value) {
     const parameters = this.searchParamters;
-    console.log(parameters);
     parameters[name] = value;
     window.location.href = window.location.href.split('?')[0] + '?' + Object.keys(parameters).map(key => `${key}=${parameters[key]}`).join(',');
   }
