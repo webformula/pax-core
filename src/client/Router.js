@@ -66,11 +66,19 @@ export default new class {
       return a;
     }, {});
   }
-
+  
   setSearchParamter(name, value) {
     const parameters = this.searchParamters;
-    parameters[name] = value;
-    window.location.href = window.location.href.split('?')[0] + '?' + Object.keys(parameters).map(key => `${key}=${parameters[key]}`).join(',');
+    if (value === undefined || value === null) delete parameters[name];
+    else parameters[name] = value;
+    let path = window.location.href.split('?')[0];
+    if (Object.keys(parameters).length > 0) path += '?' + Object.keys(parameters).map(key => `${key}=${parameters[key]}`).join(',');
+
+    window.history.pushState({ path }, '', path);
+  }
+
+  removeSearchParamter(name) {
+    this.setSearchParamter(name, undefined);
   }
 
   addTransitionCSS() {
