@@ -82,6 +82,7 @@ export default new class {
   }
 
   addTransitionCSS() {
+    if (this._addTransitionCSSAdded) return;
     document.body.insertAdjacentHTML('beforebegin', `<style>
       page-container {
         display: flex;
@@ -116,6 +117,17 @@ export default new class {
                     transform .26s cubic-bezier(0,0,.2,1);
       }
     </style>`);
+    this._addTransitionCSSAdded = true;
+  }
+
+  addPageHideCSS() {
+    if (this._addPageHideCSSAdded) return;
+    document.body.insertAdjacentHTML('beforebegin', `<style>
+      .mdw-hide-non-page-container {
+        display: none;
+      }
+    </style>`);
+    this._addPageHideCSSAdded = true;
   }
 
   // you can configure routes directly in the Page class
@@ -160,6 +172,38 @@ export default new class {
     if (Class) this._notFoundRouteClass = Class;
   }
 
+  /* Hide all top level elements except for the page-container
+   */
+  showPageOnly() {
+    const pageContainer = document.querySelector('page-container');
+    const html = document.documentElement;
+    let node = pageContainer;
+    let sibling;
+    let directPatent = pageContainer;
+
+    while (node.parentNode && node.parentNode !== html) {
+      node = node.parentNode;
+      sibling = node.firstChild;
+      while (sibling) {
+        if (sibling.nodeType === 1 && sibling !== directPatent) {
+          sibling.classList.add('mdw-hide-non-page-container');
+        }
+        sibling = sibling.nextSibling
+      }
+      directPatent = node;
+    }
+    this.addPageHideCSS();
+    this._isShowingPageOnly = true;
+  }
+
+  /* un-hide non page-container elements
+   */
+  undoShowPageOnly() {
+    if (this._isShowingPageOnly === true) {
+      [...document.querySelectorAll('.mdw-hide-non-page-container') || []].forEach(el => el.classList.remove('mdw-hide-non-page-container'));
+      this._isShowingPageOnly = false;
+    }
+  }
 
   // --- private ---
 
@@ -238,6 +282,7 @@ export default new class {
 
     //
     this._stopWatchingForConnect();
+    this.undoShowPageOnly();
 
     const renderBlock = document.querySelector('page-render-block');
 
