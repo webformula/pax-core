@@ -1,7 +1,7 @@
 export default class Page {
     constructor() {
+      this._rendered = false;
       this.global = typeof globalThis !== 'undefined' ? globalThis : window;
-      if (this.global.displayPageContentOnly) this.displayPageContentOnly(true);
     }
 
     // called once page is renderd
@@ -39,35 +39,13 @@ export default class Page {
       const renderBlock = document.querySelector('page-render-block:not(.previous)');
       if (!renderBlock) throw Error('Could not find <page-render-block>');
 
-      if (this.removeEvents) this.removeEvents();
-      if (this.beforeRender) this.beforeRender();
+      if (this.removeEvents && this._rendered) this.removeEvents();
+      if (this.beforeRender && this._rendered) this.beforeRender();
       renderBlock.innerHTML = `<style>${this.styles()}</style>${this.template()}`;
       if (this.afterRender) this.afterRender();
       if (this.addEvents) this.addEvents();
-    }
 
-    // hide any non immidiate elements above or on the same level ad the page content
-    displayPageContentOnly(reverse = false) {
-      const renderBlock = document.querySelector('page-render-block');
-      const html = document.documentElement;
-      let node = renderBlock;
-      let sibling;
-      let directPatent = renderBlock;
-
-      while (node.parentNode && node.parentNode !== html) {
-          node = node.parentNode;
-          sibling = node.firstChild;
-          while (sibling) {
-              if (sibling.nodeType === 1 && sibling !== directPatent) {
-                  if (reverse) sibling.classList.remove('hide-other-than-page-content');
-                  else sibling.classList.add('hide-other-than-page-content');
-              }
-              sibling = sibling.nextSibling
-          }
-          directPatent = node;
-      }
-
-      this.global.displayPageContentOnly = !reverse;
+      this._rendered = true;
     }
 
     // Called before render(). placeholder, can be overidden
