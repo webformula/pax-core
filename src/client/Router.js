@@ -66,6 +66,10 @@ export default new class {
       return a;
     }, {});
   }
+
+  set hash(value) {
+    window.location = `#/${value}`;
+  }
   
   setSearchParamter(name, value) {
     const parameters = this.searchParamters;
@@ -208,10 +212,6 @@ export default new class {
   // --- private ---
 
   _resolve(event, initial = false) {
-    if (this.ignoreNextPageChange) {
-      this.ignoreNextPageChange = false;
-      return;
-    }
     const { oldURL, newURL } = event || {};
 
     // no change
@@ -220,8 +220,7 @@ export default new class {
     const intercepterValue = this.intercepter ? this.intercepter(newURL, oldURL) : undefined;
     if (intercepterValue && intercepterValue.then && typeof intercepterValue.then === 'function') console.error('you cannot return a Promise to the router.intercepter callback. Expecting either true or false');
     if (intercepterValue === false) {
-      this.ignoreNextPageChange = true;
-      window.history.back();
+      window.history.go();
       return;
     }
 
