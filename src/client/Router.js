@@ -260,17 +260,20 @@ export default new class {
 
   // check all possible scroll elements and reset them
   resetPageScroll() {
-    const pageContent = document.querySelector('mdw-page mdw-content');
-    if (pageContent && pageContent.scrollTop > 0) pageContent.scrollTop= 0;
+    const pageContent = document.querySelector('mdw-page mdw-page-content');
+    if (pageContent && pageContent.scrollTop > 0) return pageContent.scrollTop = 0;
+
+    const content = document.querySelector('mdw-page mdw-content');
+    if (content && content.scrollTop > 0) return content.scrollTop= 0;
 
     const page = document.querySelector('mdw-page');
-    if (page && page.scrollTop > 0) page.scrollTop = 0;
+    if (page && page.scrollTop > 0) return page.scrollTop = 0;
 
     const body = document.querySelector('body');
-    if (body.scrollTop > 0) body.scrollTop = 0;
+    if (body.scrollTop > 0) return body.scrollTop = 0;
 
     const documentElement = document.documentElement;
-    if (documentElement.scrollTop > 0) documentElement.scrollTop = 0;
+    if (documentElement.scrollTop > 0) return documentElement.scrollTop = 0;
   }
 
   _changePage({ Class }) {
