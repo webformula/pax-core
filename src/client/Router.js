@@ -229,7 +229,7 @@ export default new class {
 
     if (!match) {
       if (this._notFoundRouteClass) return this._changePage(this._notFoundRouteClass);
-      else return console.warn('no page found and no default not found page setup');
+      else return console.warn('no page found');
     }
 
     let url = path;
@@ -302,8 +302,8 @@ export default new class {
       return;
     }
 
-    // --- no transiton ---
-    // change page immideatly if transitions are not on
+    // --- no transition ---
+    // change page immediately if transitions are not on
     if (!this._transitionPages) {
       window.activePage.disconnectedCallback();
 
