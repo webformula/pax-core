@@ -32,11 +32,18 @@ async function getPageFiles({ rootFolder, pagesFolder, entryFilePath, ignoreFile
       const file = await readFileAsync(fullPath)
       const content = file.toString();
       const prepedPath = fullPath.substring(fullPath.indexOf(pagesFolder) + pagesFolder.length).replace('.js', '').replace(/^\/+/g, '');
-      const route = prepedPath.toLowerCase().replace(`/${ignoreFileInPath.replace('.js', '')}`, '');
+
+      // remove last part of path if it matches ignore
+      let route = prepedPath;
+      const spitPath = prepedPath.split('/');
+      if (spitPath.pop() === ignoreFileInPath.replace('.js', '')) {
+        route = spitPath.join('/');
+      }
+
       const classMatch = pageClassnameRegex.exec(content);
       const className = classMatch ? classMatch[1] : prepedPath.split('/').pop();
       const relativePath = `./${path.relative(path.parse(entryFilePath).dir, fullPath)}`;
-      const template = await getTemplate(content, pagesFolder, rootFolder);
+      const template = await getTemplate(content, pagesFolder, rootFolder, fullPath);
       return {
         fullPath,
         relativePath,
@@ -84,16 +91,17 @@ export {
 `;
 }
 
-async function getTemplate(content, pagesFolder, rootFolder) {
+async function getTemplate(content, pagesFolder, rootFolder, fullPath) {
   const match = /template\(\)\s+\{\s+(?<content>.+)\s+\}/gm.exec(content);
   if (match && match.groups && match.groups.content) {
     if (match.groups.content.includes('.html')) {
-      const url = match.groups.content.replace('return', '').replace(';', '').replace(/\'/g, '').replace(/"/g, '').trim();
+      const pageTemplatePath = match.groups.content.replace('return', '').replace(';', '').replace(/\'/g, '').replace(/"/g, '').trim();
+      const pageClassDir = path.dirname(fullPath);
+      const templatePath = path.join(pageClassDir, pageTemplatePath);
       try {
-        const absUrl = path.join(rootFolder, pagesFolder, url.split(pagesFolder)[1]);
         return [
-          url,
-          (await readFileAsync(absUrl)).toString()
+          templatePath.replace(`${rootFolder}/`, ''),
+          (await readFileAsync(templatePath)).toString()
         ];
       } catch (e) {
         console.error(e);
