@@ -3,8 +3,7 @@ export default class Page {
     this._rendered = false;
     this.global = typeof globalThis !== 'undefined' ? globalThis : window;
 
-    // try to pre-load the template
-    this._getTemplate();
+    this._filePath = this._getCallerFilePath();
   }
 
   // called once page is rendered
@@ -21,6 +20,7 @@ export default class Page {
 
   // render page html
   async render() {
+    console.log('render');
     if (this._disableRender === true) return;
     if (!this._templateSetup) await this._getTemplate();
 
@@ -57,25 +57,51 @@ export default class Page {
     if (this._templateSetup === true) return;
 
     const template = this.template();
+    const isUrl = template.match(/.html$/);
 
-    // template string
-    if (!template.match(/.html$/)) {
-      this._templateMethod = this.template;
-    
-    // template url cached
-    } else if (window._templates && window._templates[template]) {
-      this._templateMethod = new Function(`return \`${window._templates[template]}\`;`);
-      console.log('cached');
+    if (isUrl) {
+      const possiblePath = new URL(template, this._filePath).pathname;
 
-    // template url
+      // template from built template file
+      if (window._templates && (window._templates[possiblePath] || window._templates[possiblePath.replace(/^\/+/, '')])) {
+        this._templateMethod = new Function(`return \`${window._templates[possiblePath] || window._templates[possiblePath.replace(/^\/+/, '')]}\`;`);
+
+      // load template url
+      } else {
+        // this._filePath is generated in the constructor
+        const fileUrl = new URL(template, this._filePath);
+        const response = await fetch(fileUrl);
+        const str = await response.text();
+        // allow javascript template string syntax in external html file ( ${things} )
+        this._templateMethod = new Function(`return \`${str}\`;`);
+      }
     } else {
-      console.log(template, window._templates);
-      const response = await fetch(template);
-      const str = await response.text();
-      // allow javascript template string syntax ( ${things} )
-      this._templateMethod = new Function(`return \`${str}\`;`);
+      this._templateMethod = this.template;
     }
 
     this._templateSetup = true;
+  }
+
+
+  // hack way to utilize stack traces to get the caller's file path
+  _getCallerFilePath() {
+    // we are going to temporarily override this method. Keep for restore
+    const originalPrepareStackTrace = Error.prepareStackTrace;
+    let callerFile;
+
+    try {
+      // temporary change
+      Error.prepareStackTrace = (_, stack) => stack;
+      const err = new Error();
+      let currentFile = err.stack.shift().getFileName();
+      while (err.stack.length) {
+        callerFile = err.stack.shift().getFileName();
+        if (currentFile !== callerFile) break;
+      }
+    } catch (err) { }
+
+    // restore original method
+    Error.prepareStackTrace = originalPrepareStackTrace; 
+    return callerFile;
   }
 }
