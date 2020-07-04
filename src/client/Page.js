@@ -20,7 +20,6 @@ export default class Page {
 
   // render page html
   async render() {
-    console.log('render');
     if (this._disableRender === true) return;
     if (!this._templateSetup) await this._getTemplate();
 

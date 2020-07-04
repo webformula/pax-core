@@ -75,7 +75,6 @@ async function getComponentFiles({ rootFolder, entryFilePath }) {
 
 function entryTemplate({ pageFiles = [], componentFiles = [], routerConfig = {}, paxCorePath, templateFile, templateFilePath, rootFolder }) {
   return `${componentFiles.map(({ relativePath }) => `import '${relativePath}';`).join('\n')}
-${templateFile && `import './${path.relative(rootFolder, templateFilePath)}';`}
 
 import { router } from '${paxCorePath}';
 ${pageFiles.map(({ className, relativePath }) => `import ${className} from '${relativePath}';`).join('\n')}
