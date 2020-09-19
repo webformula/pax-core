@@ -95,12 +95,10 @@ async function getTemplate(content, pagesFolder, rootFolder, fullPath) {
   if (match && match.groups && match.groups.content) {
     if (match.groups.content.includes('.html')) {
       const pageTemplatePath = match.groups.content.replace('return', '').replace(';', '').replace(/\'/g, '').replace(/"/g, '').trim();
-      const pageClassDir = path.dirname(fullPath);
-      const templatePath = path.join(pageClassDir, pageTemplatePath);
       try {
         return [
-          templatePath.replace(`${rootFolder}/`, ''),
-          (await readFileAsync(templatePath)).toString()
+          pageTemplatePath,
+          (await readFileAsync(`${rootFolder}/${pageTemplatePath}`)).toString()
         ];
       } catch (e) {
         console.error(e);

@@ -3,7 +3,7 @@ export default class Page {
     this._rendered = false;
     this.global = typeof globalThis !== 'undefined' ? globalThis : window;
 
-    this._filePath = this._getCallerFilePath();
+    // this._filePath = this._getCallerFilePath();
   }
 
   // called once page is rendered
@@ -59,17 +59,14 @@ export default class Page {
     const isUrl = template.match(/.html$/);
 
     if (isUrl) {
-      const possiblePath = new URL(template, this._filePath).pathname;
-
       // template from built template file
-      if (window._templates && (window._templates[possiblePath] || window._templates[possiblePath.replace(/^\/+/, '')])) {
-        this._templateMethod = new Function(`return \`${window._templates[possiblePath] || window._templates[possiblePath.replace(/^\/+/, '')]}\`;`);
+      if (window._templates && (window._templates[template] || window._templates[template.replace(/^\/+/, '')])) {
+        this._templateMethod = new Function(`return \`${window._templates[template] || window._templates[template.replace(/^\/+/, '')]}\`;`);
 
       // load template url
       } else {
         // this._filePath is generated in the constructor
-        const fileUrl = new URL(template, this._filePath);
-        const response = await fetch(fileUrl);
+        const response = await fetch(template);
         const str = await response.text();
         // allow javascript template string syntax in external html file ( ${things} )
         this._templateMethod = new Function(`return \`${str}\`;`);
