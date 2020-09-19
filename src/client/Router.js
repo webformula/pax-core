@@ -260,6 +260,9 @@ export default new class {
 
   // check all possible scroll elements and reset them
   resetPageScroll() {
+    const scrollContent = document.querySelector('mdw-scroll-container > mdw-scroll-content');
+    if (scrollContent && scrollContent.scrollTop > 0) return scrollContent.scrollTop = 0;
+    
     const scrollContainer = document.querySelector('mdw-scroll-container');
     if (scrollContainer && scrollContainer.scrollTop > 0) return scrollContainer.scrollTop = 0;
 
