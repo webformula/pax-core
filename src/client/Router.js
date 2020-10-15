@@ -386,6 +386,9 @@ export default new class {
     if (!matched.length) return false;
     else if (matched.length === 1) return matched[0];
     else {
+      const exactMatch = matched.find(({ route }) => route === `/${path}`);
+      if (exactMatch) return exactMatch;
+      
       return matched.sort((a, b) => {
         if (b.params) return 1;
         return -1;
