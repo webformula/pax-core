@@ -18,7 +18,7 @@ export default async function build({ rootFolder = 'app', pagesFolder = 'pages',
   ]);
   
   if (templateFile) {
-    const templates = Object.fromEntries(pageFiles.filter(({ template }) => !!template[0]).map(({ template }) => template));
+    const templates = await Promise.all(glob.sync(path.join(rootFolder, pagesFolder, '/**/*.html')).map(path => getTemplateFile(path, rootFolder)));
     await writeFileAsync(templateFilePath, `/* eslint-disable quotes */\n/* eslint-disable no-template-curly-in-string */\nwindow._templates = ${JSON.stringify(templates, null, 2)};`);
   }
 
@@ -108,4 +108,13 @@ async function getTemplate(content, pagesFolder, rootFolder, fullPath) {
   }
   
   return ['', ''];
+}
+
+async function getTemplateFile(path, rootFolder) {
+  const pathArr = path.split('/');
+  pathArr.shift();
+  return [
+    pathArr.join('/'),
+    (await readFileAsync(path)).toString()
+  ];
 }
