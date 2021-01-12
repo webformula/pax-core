@@ -8,17 +8,19 @@ export default class HTMLElementExtended extends HTMLElement {
   }
 
   /* Clone from pre built htmlTemplate
-   *   - Rerender: replaces html but not styles. This is usefull for dynamic templates
+   *   - Rerender: replaces html but not styles. This is useful for dynamic templates
+   *   - noShadowRoot: if you  want the css and html in the same scope as the document set this to true
    */
-  cloneTemplate(rerender) {
+  cloneTemplate({ rerender, noShadowRoot } = { rerender: false, noShadowRoot: false }) {
+    this.noShadowRoot = noShadowRoot;
     let template = document.getElementById(this._templateId);
     
     // create template on the fly
     if (!template) template = this._createTemplate();
 
     const templateContent = template.content;
-    const shadowRoot = this.shadowRoot ? this.shadowRoot : this.attachShadow({ mode: 'open' });
     const clone = templateContent.cloneNode(true);
+    const shadowRoot = noShadowRoot === true ? undefined : this.shadowRoot ? this.shadowRoot : this.attachShadow({ mode: 'open' });
 
     if (rerender) {
       // this.__isBuildProcess is present during the build process and will be undefined in the browser
@@ -26,7 +28,11 @@ export default class HTMLElementExtended extends HTMLElement {
       clone.querySelector('render-block').innerHTML = this.template();
     }
 
-    shadowRoot.appendChild(clone);
+    if (noShadowRoot === true) {
+      this.appendChild(clone);
+    } else {
+      shadowRoot.appendChild(clone);
+    }
     if (!this.__isBuildProcess && this.afterRender) this.afterRender();
 
   }
@@ -60,7 +66,7 @@ export default class HTMLElementExtended extends HTMLElement {
     // this.__isBuildProcess is present during the build process and will be undefined in the browser
     if (this.__isBuildProcess) return;
 
-    const renderBlock = this.shadowRoot.querySelector('render-block');
+    const renderBlock = this.noShadowRoot === true ? this.querySelector('render-block') : this.shadowRoot.querySelector('render-block');
     if (!renderBlock) throw Error('Could not find <render-block>');
 
     if (this.removeEvents) this.removeEvents();
