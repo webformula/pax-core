@@ -59,7 +59,7 @@ export default new class {
     return match ? match.params : {};
   }
 
-  get searchParamters() {
+  get searchParameters() {
     return this._extractSearchParameters(this._clean(window.location.href)).split(',').filter(a => !!a).reduce((a, b) => {
       const split = b.split('=');
       a[split[0]] = split[1];
@@ -72,7 +72,7 @@ export default new class {
   }
   
   setSearchParamter(name, value) {
-    const parameters = this.searchParamters;
+    const parameters = this.searchParameters;
     if (value === undefined || value === null) delete parameters[name];
     else parameters[name] = value;
     let path = window.location.href.split('?')[0];

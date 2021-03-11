@@ -61,8 +61,12 @@ export default class Page {
     if (isUrl) {
       // template from built template file
       if (window._templates && (window._templates[template] || window._templates[template.replace(/^\/+/, '')])) {
-        this._templateMethod = new Function(`return \`${window._templates[template] || window._templates[template.replace(/^\/+/, '')]}\`;`);
-
+        try {
+          this._templateMethod = new Function(`return \`${window._templates[template] || window._templates[template.replace(/^\/+/, '')]}\`;`);
+        } catch (e) {
+          console.error(`Error in html template file ${window._templates[template] || window._templates[template.replace(/^\/+/, '')]}`);
+          throw e;
+        }
       // load template url
       } else {
         // this._filePath is generated in the constructor
