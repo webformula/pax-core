@@ -3,13 +3,19 @@ import path from 'node:path';
 
 export default class Controller {
   constructor(options = {
+    pageTitle: '',
     routes: [],
     templatePath: './page.html',
     classPath: './page.js'
   }) {
+    this._pageTitle = options.pageTitle;
     this._routes = options.routes;
     this._templatePath = options?.templatePath ? options.templatePath : './page.html';
     this._classPath = options?._classPath ? options._classPath : './page.js';
+  }
+
+  get pageTitle() {
+    return this._pageTitle || capitalizeFirstLetter(this._folder);
   }
 
   get templatePath() {
@@ -41,4 +47,9 @@ export default class Controller {
     const page = await this.getData(req);
     return new Function('page', `return \`${this._templateString}\`;`).call(this, page);
   }
+}
+
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }

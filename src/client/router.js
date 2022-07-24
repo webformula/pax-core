@@ -7,6 +7,8 @@ const parameterRegex = /([:*])(\w+)/g;
 const wildcardRegex = /\*/g;
 const replaceWidCardString = '(?:.*)';
 const followedBySlashRegexString = '(?:\/$|$)';
+const leadingSlashRegex = /^\//;
+const urlHashRegex = /.*#/;
 
 
 export function registerPage(pageClass, options = { route: 'path' }) {
@@ -41,8 +43,6 @@ async function pageLoader() {
 //   pageClass.render();
 // }
 
-const leadingSlashRegex = /^\//;
-const urlHashRegex = /.*#/;
 function getPath() {
   let path;
   

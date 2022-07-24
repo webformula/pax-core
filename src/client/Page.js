@@ -1,6 +1,5 @@
 export default class Page {
   constructor() {
-
     // these are set by the route
     this._urlParameters = undefined;
     this._searchParameters = undefined;

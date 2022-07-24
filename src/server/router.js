@@ -4,19 +4,23 @@ import { buildPathRegexes, matchPath } from '../helper.js';
 
 
 const CWD = process.cwd();
+const controllerFolderPartRegex = /\/(.*?)\//;
+const leadingSlashRegex = /^\//;
 const controllers = {};
 const controllerPathMap = {}; // allow multiple paths to map to same page
 let pathRegexes = [];
 let pagesFolder;
 let rootAppFolder = '';
 let indexTemplate;
+let path404;
 
 
 export function routeMiddleware(options = {
   pagesFolder: 'app/pages',
-  routeAlternatives: {'alt-path': 'pages-folder-name'}
+  path404: 'app/pages/404/page.html'
 }) {
   pagesFolder = options?.pagesFolder || 'app/pages';
+  path404 = options?.path404 || 'app/pages/404/page.html';
 
   // TODO can i do this better?
   // root folder needed for file sending. Might be able to remove the need for it.
@@ -25,23 +29,12 @@ export function routeMiddleware(options = {
     if (match) rootAppFolder = match[1];
   }
 
-  // dynamically load controllers
-  readdir(pagesFolder)
-    .then(async values => {
-      await Promise.all(values
-        .filter(item => path.extname(item) === '')
-        .map(async item => {
-          try {
-            await access(path.join(CWD, pagesFolder, item, 'controller.js'));
-            await registerController(path.join(CWD, pagesFolder, item, 'controller.js'));
-          } catch (e) {}
-        }));
-    })
-    .catch(e => console.log(e));
+  loadControllers();
 
   // NOTE express specific right now
   return async function routeMiddleware(req, res, next) {
     const cleanPath = cleanReqPath(req.path);
+    if (cleanPath === '') cleanPath = 'home';
 
     // send static file
     if (isStaticFile(cleanPath)) return await staticHandler(req, res);
@@ -55,7 +48,7 @@ export function routeMiddleware(options = {
       const pageContent = await controller.renderTemplate(req, pagesFolder);
       const scriptTags = await getScriptTags(controller);
       const indexTemplate = await getIndexTemplate();
-      const index = renderTemplate(indexTemplate, { pageContent, scriptTags });
+      const index = renderTemplate(indexTemplate, { pageContent, scriptTags, pageTitle: controller.pageTitle });
 
       res.send(index);
     } catch (e) {
@@ -65,7 +58,21 @@ export function routeMiddleware(options = {
 }
 
 
-const controllerFolderPartRegex = /\/(.*?)\//;
+
+async function loadControllers() {
+  const pages = await readdir(pagesFolder);
+  await Promise.all(
+    pages
+      .filter(item => path.extname(item) === '')
+      .map(async item => {
+        try {
+          await access(path.join(CWD, pagesFolder, item, 'controller.js'));
+          await registerController(path.join(CWD, pagesFolder, item, 'controller.js'));
+        } catch (e) { }
+      })
+  );
+}
+
 async function registerController(controllerPath) {
   const folder = controllerPath.split(pagesFolder)[1].match(controllerFolderPartRegex)[1];
   const imported = await import(controllerPath);
@@ -83,42 +90,50 @@ function isStaticFile(cleanPath) {
   if (extension && extension !== '.html') return true;
   if (cleanPath.includes('@webformula/pax-core')) return true;
   if (matchPath(cleanPath, pathRegexes)) return false;
+  if (cleanPath === 'home') true;
   return true;
 }
 
 async function staticHandler(req, res) {
-  const extension = path.extname(req.path);
+  let reqPath = req.path;
+  if (reqPath === '/') reqPath = `/${pagesFolder.replace(rootAppFolder, '')}/home/page.html`;
+  const extension = path.extname(reqPath);
 
   // for some reason the files can come through without pax-core in the path
   // auto map to client code
-  if (req.path.includes('/@webformula')) {
+  if (reqPath.includes('/@webformula')) {
     if (!extension) {
       return res.sendFile(path.join(CWD, 'node_modules', '@webformula/pax-core/src/client/index.js'));
     }
 
     // make sure pax-core is in path
-    return res.sendFile(path.join(CWD, 'node_modules/@webformula/pax-core/src/client', req.path.replace('@webformula/pax-core/client', '').replace('@webformula/pax-core', '').replace('@webformula', '')));
+    return res.sendFile(path.join(CWD, 'node_modules/@webformula/pax-core/src/client', reqPath.replace('@webformula/pax-core/client', '').replace('@webformula/pax-core', '').replace('@webformula', '')));
   }
 
   // NOTE modify pax cor import for relative path
   // Allows the use of import '@webformula/pax-core'
   if (extension === '.js') {
-    const file = await readFile(path.join(CWD, rootAppFolder, req.path), 'utf-8');
+    const file = await readFile(path.join(CWD, rootAppFolder, reqPath), 'utf-8');
     res.set('Content-Type', 'application/javascript');
     if (file.includes('/@webformula')) res.send(file);
     return res.send(file.replace('@webformula', '/@webformula'));
   }
 
-  return res.sendFile(path.join(CWD, rootAppFolder, req.path));
+  const filePath = path.join(CWD, rootAppFolder, reqPath);
+  try {
+    await access(filePath);
+  } catch (e) {
+    console.log(path.join(CWD, path404))
+    return res.sendFile(path.join(CWD, path404));
+  }
+  return res.sendFile(filePath);
 }
-
 
 async function getIndexTemplate() {
   if (!indexTemplate) indexTemplate = (await readFile(`${pagesFolder}/index.html`)).toString();
   return indexTemplate;
 }
 
-const leadingSlashRegex = /^\//;
 function cleanReqPath(reqPath) {
   let cleanPath = reqPath.replace(leadingSlashRegex, '');
   if (cleanPath === '') cleanPath = 'home';
