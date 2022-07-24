@@ -128,6 +128,13 @@ async function getScriptTags(controller) {
     scriptTagsCache[cacheKey].routeMap = configData.allowSPA === false
       ? Object.fromEntries(Object.entries(configData.controllerPathMap).filter(([_, folder]) => folder === controller.folder))
       : configData.controllerPathMap;
+
+    scriptTagsCache[cacheKey].pageTitles = configData.allowSPA === false
+      ? { [controller.folder]: controller.pageTitle }
+      : Object.fromEntries(Object.values(configData.controllers).map(controller => ([
+        controller.folder,
+        controller.pageTitle
+      ])));
   }
   
   return `<script>
@@ -136,6 +143,7 @@ window.allowSPA = ${configData.allowSPA};
 window.pageFolder = '${configData.pageFolder}';
 window.pageClassPaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassPaths, null, 2)};
 window.pageClassHTMLTemplatePaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths, null, 2)};
+window.pageTitles = ${JSON.stringify(scriptTagsCache[cacheKey].pageTitles, null, 2)};
 window.routeMap = ${JSON.stringify(scriptTagsCache[cacheKey].routeMap, null, 2)};
 </script>
 

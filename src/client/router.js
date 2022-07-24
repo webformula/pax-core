@@ -7,6 +7,7 @@ import {
 const serverRendered = window.serverRendered || false;
 const allowSPA = !serverRendered ? true : window.allowSPA;
 const routeMap = window.routeMap;
+const pageTitles = window.pageTitles;
 const pageClasses = {};
 const pageTemplateStrings = {};
 let pathRegexes = [];
@@ -49,6 +50,7 @@ async function hookUpPage(url) {
 
   const nextPage = new pageClasses[pageClassRoute]();
   if (serverRendered === true && pageTemplateStrings[pageClassRoute]) nextPage.templateString = pageTemplateStrings[pageClassRoute];
+  if (serverRendered === true && pageTitles[pageClassRoute]) nextPage.pageTitle = pageTitles[pageClassRoute];
 
   // used for initial page. Pages are dynamically loaded; meaning this could be called before page is available.
   if (initialRouteCompleted !== true) initialRouteCompleted = true;

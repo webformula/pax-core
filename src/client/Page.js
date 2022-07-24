@@ -19,6 +19,13 @@ export default class Page {
     this._templateString = value;
   }
 
+  get pageTitle() {
+    return this._pageTitle;
+  }
+  set pageTitle(value) {
+    this._pageTitle = value;
+  }
+
   // override
   connectedCallback() { }
   disconnectedCallback() { }
@@ -37,6 +44,7 @@ export default class Page {
     // TODO replace with setHTML when supported. https://developer.mozilla.org/en-US/docs/Web/API/Element/setHTML
     // currently security concerns should be mitigated by the template literal
     pageContent.innerHTML = renderedTemplate;
+    document.querySelector('title').innerText = this.pageTitle;
 
     await this.afterRender();
   }
