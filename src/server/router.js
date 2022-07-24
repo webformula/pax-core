@@ -1,11 +1,10 @@
 import path from 'node:path';
 import { readFile, readdir, access } from 'node:fs/promises';
-import { buildPathRegexes, matchPath } from '../helper.js';
+import { buildPathRegexes, matchPath, cleanReqPath } from '../helper.js';
 
 
 const CWD = process.cwd();
 const controllerFolderPartRegex = /\/(.*?)\//;
-const leadingSlashRegex = /^\//;
 const controllers = {};
 const controllerPathMap = {}; // allow multiple paths to map to same page
 let pathRegexes = [];
@@ -142,12 +141,6 @@ async function getIndexTemplate() {
   return indexTemplate;
 }
 
-function cleanReqPath(reqPath) {
-  let cleanPath = reqPath.replace(leadingSlashRegex, '');
-  if (cleanPath === '') cleanPath = 'home';
-  return cleanPath;
-}
-
 function renderTemplate(templateString, data) {
   const page = data;
   return new Function('page', `return \`${templateString}\`;`).call(data, page);
@@ -161,6 +154,10 @@ window.pageClassPaths = ${JSON.stringify(Object.values(controllers).map(controll
   controller.folder,
   path.join('/', pagesFolder, controller.folder, controller.classPath).replace(rootAppFolder, '')
 ])), null, 2)};
+window.pageClassHTMLTemplatePaths = ${JSON.stringify(Object.fromEntries(Object.values(controllers).map(controller => ([
+  controller.folder,
+  path.join('/', pagesFolder, controller.folder, controller.templatePath).replace(rootAppFolder, '')
+]))), null, 2)};
 window.routeMap = ${JSON.stringify(controllerPathMap, null, 2)};
 </script>
 

@@ -6,6 +6,7 @@ const followedBySlashRegexString = '(?:\/$|$)';
 const leadingSlashRegex = /^\//;
 const urlHashRegex = /.*#/;
 
+
 export function getPath() {
   let path;
 
@@ -15,12 +16,6 @@ export function getPath() {
 
   if (path.indexOf('?') > -1) path = path.split('?')[0];
   return path;
-}
-
-export function cleanReqPath(reqPath) {
-  let cleanPath = reqPath.replace(leadingSlashRegex, '');
-  if (cleanPath === '') cleanPath = 'home';
-  return cleanPath;
 }
 
 export function buildPathRegexes(allPaths = []) {
