@@ -1,4 +1,5 @@
-import { configureApp, handleRoute } from './router.js';
+import { handleRoute } from './router.js';
+import { configureApp } from './loader.js';
 
 let framework;
 
@@ -34,9 +35,10 @@ function determineFramework() {
 
 async function expressMiddleware(req, res, next) {
   try {
-    const { statusCode, responseBody, headers, filePath, error } = await handleRoute(req.path, req.body, req.params, req.query);
+    const { statusCode, responseBody, headers, filePath, error, redirect } = await handleRoute(req.path, req.body, req.params, req.query);
     if (error) return next(error);
     if (filePath) return res.sendFile(filePath);
+    if (redirect) return res.redirect(redirect);
     
     if (headers) {
       Object.entries(headers).forEach(([name, value]) => {

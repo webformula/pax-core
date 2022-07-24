@@ -11,10 +11,34 @@ export default class Page {
   get urlParameters() {
     return this._urlParameters;
   }
+  
+  get templateString() {
+    return this._templateString;
+  }
+  set templateString(value) {
+    this._templateString = value;
+  }
 
   // override
-  connectedCallback() {
+  connectedCallback() { }
+  disconnectedCallback() { }
+  async beforeRender() { }
+  async afterRender() { }
 
+  async _renderTemplate() {
+    const pageContent = document.querySelector('page-content');
+    if (!pageContent) throw Error('Could not find <page-content>');
+
+    await this.beforeRender();
+
+    if (!this.templateString) throw Error('No templateString');
+    const renderedTemplate = new Function('page', `return \`${this.templateString}\`;`).call(this, this);
+
+    // TODO replace with setHTML when supported. https://developer.mozilla.org/en-US/docs/Web/API/Element/setHTML
+    // currently security concerns should be mitigated by the template literal
+    pageContent.innerHTML = renderedTemplate;
+
+    await this.afterRender();
   }
 
   // called by router

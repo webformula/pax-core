@@ -6,21 +6,19 @@ const followedBySlashRegexString = '(?:\/$|$)';
 const leadingSlashRegex = /^\//;
 const urlHashRegex = /.*#/;
 
-export function getPath() {
-  let path;
 
-  if (window.serverRendered) path = window.location.pathname.replace(leadingSlashRegex, '');
-  // SPA with hashes
-  else path = window.location.hash.replace(urlHashRegex, '');
+export function parseURL(url) {
+  let result = url;
 
-  if (path.indexOf('?') > -1) path = path.split('?')[0];
-  return path;
-}
+  try {
+    const parsed = new URL(url);
+    result = parsed.pathname;
+  } catch { }
 
-export function cleanReqPath(reqPath) {
-  let cleanPath = reqPath.replace(leadingSlashRegex, '');
-  if (cleanPath === '') cleanPath = 'home';
-  return cleanPath;
+  let cleaned = result.replace(leadingSlashRegex, '');
+  if (cleaned === '') cleaned = 'home';
+
+  return cleaned;
 }
 
 export function buildPathRegexes(allPaths = []) {

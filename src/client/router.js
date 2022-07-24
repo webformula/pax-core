@@ -1,51 +1,80 @@
 import {
-  getPath,
+  parseURL,
   buildPathRegexes,
   matchPath
 } from './helper.js';
 
+const serverRendered = window.serverRendered || false;
+const allowSPA = !serverRendered ? true : window.allowSPA;
+const routeMap = window.routeMap;
 const pageClasses = {};
+const pageTemplateStrings = {};
 let pathRegexes = [];
 let initialRouteCompleted = false;
 
 
 export function registerPage(pageClass, options = { route: 'path', HTMLTemplateString }) {
-  pageClass._templateString = options?.HTMLTemplateString;
+  pageTemplateStrings[options.route] = options?.HTMLTemplateString;
   pageClasses[options.route] = pageClass;
   handleInitialRoute();
 }
 
-if (window.routeMap) pathRegexes = buildPathRegexes(Object.keys(window.routeMap));
 
 
-// async function hashchange(event) {
-//   const path = getPath();
-//   const pageClass = routes[path.replace('/', '')];
-//   pageClass.template = await fetchTemplate();
-//   pageClass.render();
-// }
+if (routeMap) pathRegexes = buildPathRegexes(Object.keys(routeMap));
+if (allowSPA === true) {
+  document.addEventListener('click', async event => {
+    // TODO how do i handle external links
+    if (!event.target.matches('a[href]')) return;
+    event.preventDefault();
+    hookUpPage(event.target.href);
+  });
+}
 
-function handleInitialRoute() {
-  if (initialRouteCompleted === true) return; 
 
-  const path = getPath();
+async function hookUpPage(url) {
+  const currentPage = window.page;
+  const path = parseURL(url);
   const match = matchPath(path, pathRegexes);
-  if (!match) return;
+  if (!match) {
+    if (initialRouteCompleted === true) console.warn(`No page found for url: ${url}`);
+    return;
+  }
 
-  const pageClassRoute = window.routeMap[match.configuredPath];
-  if (!pageClassRoute || !pageClasses[pageClassRoute]) return;
-  initialRouteCompleted = true;
+  const pageClassRoute = routeMap[match.configuredPath];
+  if (!pageClassRoute || !pageClasses[pageClassRoute]) {
+    if (initialRouteCompleted === true) console.warn(`No page found for url: ${url}`);
+    return;
+  }
 
-  window.page = new pageClasses[pageClassRoute]();
-  window.page._setUrlData({
+  const nextPage = new pageClasses[pageClassRoute]();
+  if (serverRendered === true && pageTemplateStrings[pageClassRoute]) nextPage.templateString = pageTemplateStrings[pageClassRoute];
+
+  // used for initial page. Pages are dynamically loaded; meaning this could be called before page is available.
+  if (initialRouteCompleted !== true) initialRouteCompleted = true;
+
+  const urlMatches = doesUrlMatchWindowLocation(url);
+  if (!urlMatches) window.history.pushState({}, '', url);
+
+  if (currentPage) currentPage.disconnectedCallback();
+  window.page = nextPage;
+  nextPage._setUrlData({
     urlParameters: match.parameters,
     searchParameters: {}
   });
 
-  // TODO render template
-  if (!window.serverRendered) {
-    
-  }
+  if (!urlMatches || (urlMatches && serverRendered !== true)) await nextPage._renderTemplate();
 
-  window.page.connectedCallback();
+  nextPage.connectedCallback();
+}
+
+function doesUrlMatchWindowLocation(url) {
+  if (url === window.location.href) return true;
+  if (url === window.location.pathname) return true;
+  return false;
+}
+
+function handleInitialRoute() {
+  if (initialRouteCompleted === true) return;
+  hookUpPage(window.location.pathname);
 }

@@ -4,19 +4,8 @@ const wildcardRegex = /\*/g;
 const replaceWidCardString = '(?:.*)';
 const followedBySlashRegexString = '(?:\/$|$)';
 const leadingSlashRegex = /^\//;
-const urlHashRegex = /.*#/;
+// const urlHashRegex = /.*#/;
 
-
-export function getPath() {
-  let path;
-
-  if (window.serverRendered) path = window.location.pathname.replace(leadingSlashRegex, '');
-  // SPA with hashes
-  else path = window.location.hash.replace(urlHashRegex, '');
-
-  if (path.indexOf('?') > -1) path = path.split('?')[0];
-  return path;
-}
 
 export function buildPathRegexes(allPaths = []) {
   return allPaths.map(path => {
@@ -45,4 +34,19 @@ export function matchPath(reqPath, pathRegexes) {
     parameters: match.groups,
     match: reqPath.match(match[0])
   };
+}
+
+// TODO should i handle hashes?
+export function parseURL(url = window.location) {
+  let result = url;
+
+  try {
+    const parsed = new URL(url);
+    result = parsed.pathname;
+  } catch {}
+
+  let cleaned = result.replace(leadingSlashRegex, '');
+  if (cleaned === '') cleaned = 'home';
+
+  return cleaned;
 }

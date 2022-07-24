@@ -1,49 +1,34 @@
 import path from 'node:path';
-import { readFile, readdir, access } from 'node:fs/promises';
-import { buildPathRegexes, matchPath, cleanReqPath } from './helper.js';
+import { readFile, access } from 'node:fs/promises';
+import { matchPath, parseURL } from './helper.js';
 
 
 const CWD = process.cwd();
-const controllerFolderPartRegex = /\/(.*?)\//;
-const controllers = {};
-const controllerPathMap = {}; // allow multiple paths to map to same page
-let pathRegexes = [];
-let pagesFolder;
-let rootAppFolder = '';
-let indexTemplate;
-let path404;
-let allowSPA;
+const configData = {};
 
-
-export function configureApp(options) {
-  pagesFolder = options?.pagesFolder || 'app/pages';
-  path404 = options?.path404 || 'app/pages/404/page.html';
-  allowSPA = options?.allowSPA || false;
-
-  // TODO can i do this better?
-  // root folder needed for file sending. Might be able to remove the need for it.
-  if (pagesFolder.includes('/')) {
-    const match = pagesFolder.match(/(^[^\/]*\/)/, '');
-    if (match) rootAppFolder = match[1];
-  }
-
-  loadControllers();
+export function register(params = {
+  pagesFolder,
+  path404,
+  allowSPA,
+  rootAppFolder,
+  controllers,
+  controllerPathMap,
+  pathRegexes
+}) {
+  Object.assign(configData, params);
 }
 
 export async function handleRoute(urlPath, body, urlPathParameters, urlSearchParameters) {
-  const cleanPath = cleanReqPath(urlPath);
-  if (cleanPath === '') cleanPath = 'home';
-
-  // send static file
+  const cleanPath = parseURL(urlPath);
   if (isStaticFile(cleanPath)) return await staticHandler(cleanPath);
 
-  const matched = matchPath(cleanPath, pathRegexes);
+  const matched = matchPath(cleanPath, configData.pathRegexes);
   if (!matched) throw Error('no matching path');
 
-  const controller = controllers[controllerPathMap[matched.configuredPath]];
+  const controller = configData.controllers[configData.controllerPathMap[matched.configuredPath]];
 
   try {
-    const pageContent = await controller.renderTemplate(cleanPath, pagesFolder);
+    const pageContent = await controller.renderTemplate(cleanPath, configData.pagesFolder);
     const scriptTags = await getScriptTags(controller);
     const indexTemplate = await getIndexTemplate();
     const index = renderTemplate(indexTemplate, { pageContent, scriptTags, pageTitle: controller.pageTitle });
@@ -57,45 +42,17 @@ export async function handleRoute(urlPath, body, urlPathParameters, urlSearchPar
   }
 }
 
-
-async function loadControllers() {
-  const pages = await readdir(pagesFolder);
-  await Promise.all(
-    pages
-      .filter(item => path.extname(item) === '')
-      .map(async item => {
-        const itemPath = path.join(CWD, pagesFolder, item, 'controller.js');
-        try {
-          await access(itemPath);
-          await registerController(itemPath);
-        } catch (e) { }
-      })
-  );
-}
-
-async function registerController(controllerPath) {
-  const folder = controllerPath.split(pagesFolder)[1].match(controllerFolderPartRegex)[1];
-  const imported = await import(controllerPath);
-  imported.default.folder = folder;
-  controllers[folder] = imported.default;
-  controllerPathMap[folder] = folder;
-  (imported.default.routes || []).forEach(route => {
-    controllerPathMap[route] = folder;
-  });
-  pathRegexes = buildPathRegexes(Object.keys(controllerPathMap));
-}
-
 function isStaticFile(cleanPath) {
   const extension = path.extname(cleanPath);
   if (extension && extension !== '.html') return true;
   if (cleanPath.includes('@webformula/pax-core')) return true;
-  if (matchPath(cleanPath, pathRegexes)) return false;
+  if (matchPath(cleanPath, configData.pathRegexes)) return false;
   if (cleanPath === 'home') true;
   return true;
 }
 
 async function staticHandler(reqPath) {
-  if (reqPath === '/') reqPath = `/${pagesFolder.replace(rootAppFolder, '')}/home/page.html`;
+  if (reqPath === '/') reqPath = `/${configData.pagesFolder.replace(configData.rootAppFolder, '')}/home/page.html`;
   const extension = path.extname(reqPath);
 
   // for some reason the files can come through without pax-core in the path
@@ -116,7 +73,7 @@ async function staticHandler(reqPath) {
   // NOTE modify pax cor import for relative path
   // Allows the use of import '@webformula/pax-core'
   if (extension === '.js') {
-    const file = await readFile(path.join(CWD, rootAppFolder, reqPath), 'utf-8');
+    const file = await readFile(path.join(CWD, configData.rootAppFolder, reqPath), 'utf-8');
 
     let fileData;
     if (file.includes('/@webformula')) fileData = res.send(file);
@@ -129,18 +86,18 @@ async function staticHandler(reqPath) {
     };
   }
 
-  const filePath = path.join(CWD, rootAppFolder, reqPath);
+  const filePath = path.join(CWD, configData.rootAppFolder, reqPath);
   try {
     await access(filePath);
   } catch (e) {
-    return { filePath: path.join(CWD, path404) };
+    return { filePath: path.join(CWD, configData.path404) };
   }
   return { filePath };
 }
 
 async function getIndexTemplate() {
-  if (!indexTemplate) indexTemplate = (await readFile(`${pagesFolder}/index.html`)).toString();
-  return indexTemplate;
+  if (!configData.indexTemplate) configData.indexTemplate = (await readFile(`${configData.pagesFolder}/index.html`)).toString();
+  return configData.indexTemplate;
 }
 
 function renderTemplate(templateString, data) {
@@ -150,32 +107,32 @@ function renderTemplate(templateString, data) {
 
 const scriptTagsCache = {};
 async function getScriptTags(controller) {
-  const cacheKey = `${controller.folder}-allowSPA${allowSPA}`;
+  const cacheKey = `${controller.folder}-allowSPA${configData.allowSPA}`;
   if (!scriptTagsCache[cacheKey]) {
     scriptTagsCache[cacheKey] = {};
-    scriptTagsCache[cacheKey].pageClassPaths = allowSPA === false
-      ? [controller.folder, path.join('/', pagesFolder, controller.folder, controller.classPath).replace(rootAppFolder, '')]
-      : Object.values(controllers).map(controller => ([
+    scriptTagsCache[cacheKey].pageClassPaths = configData.allowSPA === false
+      ? [[controller.folder, path.join('/', configData.pagesFolder, controller.folder, controller.classPath).replace(configData.rootAppFolder, '')]]
+      : Object.values(configData.controllers).map(controller => ([
         controller.folder,
-        path.join('/', pagesFolder, controller.folder, controller.classPath).replace(rootAppFolder, '')
+        path.join('/', configData.pagesFolder, controller.folder, controller.classPath).replace(configData.rootAppFolder, '')
       ]));
 
-    scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths = allowSPA === false
-      ? { [controller.folder]: path.join('/', pagesFolder, controller.folder, controller.templatePath).replace(rootAppFolder, '') }
-      : Object.fromEntries(Object.values(controllers).map(controller => ([
+    scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths = configData.allowSPA === false
+      ? { [controller.folder]: path.join('/', configData.pagesFolder, controller.folder, controller.templatePath).replace(configData.rootAppFolder, '') }
+      : Object.fromEntries(Object.values(configData.controllers).map(controller => ([
         controller.folder,
-        path.join('/', pagesFolder, controller.folder, controller.templatePath).replace(rootAppFolder, '')
+        path.join('/', configData.pagesFolder, controller.folder, controller.templatePath).replace(configData.rootAppFolder, '')
       ])));
 
-    scriptTagsCache[cacheKey].routeMap = allowSPA === false
-      ? Object.fromEntries(Object.entries(controllerPathMap).filter(([_, folder]) => folder === controller.folder))
-      : controllerPathMap;
+    scriptTagsCache[cacheKey].routeMap = configData.allowSPA === false
+      ? Object.fromEntries(Object.entries(configData.controllerPathMap).filter(([_, folder]) => folder === controller.folder))
+      : configData.controllerPathMap;
   }
   
   return `<script>
 window.serverRendered = true;
-window.allowSPA = ${allowSPA};
-window.pagesFolder = '${pagesFolder}';
+window.allowSPA = ${configData.allowSPA};
+window.pagesFolder = '${configData.pagesFolder}';
 window.pageClassPaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassPaths, null, 2)};
 window.pageClassHTMLTemplatePaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths, null, 2)};
 window.routeMap = ${JSON.stringify(scriptTagsCache[cacheKey].routeMap, null, 2)};

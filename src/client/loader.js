@@ -1,8 +1,8 @@
-import { getPath } from './helper.js';
+import { parseURL } from './helper.js';
 import { registerPage } from './router.js';
 
 export async function loadPages() {
-  const path = getPath();
+  const path = parseURL();
 
   // built on server side
   const pageClassPaths = window.pageClassPaths.sort((a) => a[0] === path ? -1 : 1);
