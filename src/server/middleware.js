@@ -4,7 +4,13 @@ let framework;
 
 export function middleware(options = {
   pagesFolder: 'app/pages',
-  path404: 'app/pages/404/page.html'
+  path404: 'app/pages/404/page.html',
+
+  /**
+   * If false then only the code for the requested page will be loaded
+   * If true then all code is loaded and it will start working like a SPA
+   */
+  allowSPA: false
 }) {
   configureApp(options);
 

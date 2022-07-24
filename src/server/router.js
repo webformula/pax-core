@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { readFile, readdir, access } from 'node:fs/promises';
-import { buildPathRegexes, matchPath, cleanReqPath } from '../helper.js';
+import { buildPathRegexes, matchPath, cleanReqPath } from './helper.js';
 
 
 const CWD = process.cwd();
@@ -12,11 +12,13 @@ let pagesFolder;
 let rootAppFolder = '';
 let indexTemplate;
 let path404;
+let allowSPA;
 
 
 export function configureApp(options) {
   pagesFolder = options?.pagesFolder || 'app/pages';
   path404 = options?.path404 || 'app/pages/404/page.html';
+  allowSPA = options?.allowSPA || false;
 
   // TODO can i do this better?
   // root folder needed for file sending. Might be able to remove the need for it.
@@ -146,19 +148,35 @@ function renderTemplate(templateString, data) {
   return new Function('page', `return \`${templateString}\`;`).call(data, page);
 }
 
+const scriptTagsCache = {};
 async function getScriptTags(controller) {
+  const cacheKey = `${controller.folder}-allowSPA${allowSPA}`;
+  if (!scriptTagsCache[cacheKey]) {
+    scriptTagsCache[cacheKey].pageClassPaths = allowSPA === false
+      ? [controller.folder, path.join('/', pagesFolder, controller.folder, controller.classPath).replace(rootAppFolder, '')]
+      : Object.values(controllers).map(controller => ([
+        controller.folder,
+        path.join('/', pagesFolder, controller.folder, controller.classPath).replace(rootAppFolder, '')
+      ]));
+
+    scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths = allowSPA === false
+      ? { [controller.folder]: path.join('/', pagesFolder, controller.folder, controller.templatePath).replace(rootAppFolder, '') }
+      : Object.fromEntries(Object.values(controllers).map(controller => ([
+        controller.folder,
+        path.join('/', pagesFolder, controller.folder, controller.templatePath).replace(rootAppFolder, '')
+      ])));
+
+    scriptTagsCache[cacheKey].routeMap = allowSPA === false
+      ? Object.fromEntries(Object.entries(controllerPathMap).filter(([_, folder]) => folder === controller.folder))
+      : controllerPathMap;
+  }
+  
   return `<script>
 window.serverRendered = true;
 window.pagesFolder = '${pagesFolder}';
-window.pageClassPaths = ${JSON.stringify(Object.values(controllers).map(controller => ([
-  controller.folder,
-  path.join('/', pagesFolder, controller.folder, controller.classPath).replace(rootAppFolder, '')
-])), null, 2)};
-window.pageClassHTMLTemplatePaths = ${JSON.stringify(Object.fromEntries(Object.values(controllers).map(controller => ([
-  controller.folder,
-  path.join('/', pagesFolder, controller.folder, controller.templatePath).replace(rootAppFolder, '')
-]))), null, 2)};
-window.routeMap = ${JSON.stringify(controllerPathMap, null, 2)};
+window.pageClassPaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassPaths, null, 2)};
+window.pageClassHTMLTemplatePaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths, null, 2)};
+window.routeMap = ${JSON.stringify(scriptTagsCache[cacheKey].routeMap, null, 2)};
 </script>
 
 <script src="/@webformula/pax-core/client" type="module"></script>`;
