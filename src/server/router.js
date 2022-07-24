@@ -152,6 +152,7 @@ const scriptTagsCache = {};
 async function getScriptTags(controller) {
   const cacheKey = `${controller.folder}-allowSPA${allowSPA}`;
   if (!scriptTagsCache[cacheKey]) {
+    scriptTagsCache[cacheKey] = {};
     scriptTagsCache[cacheKey].pageClassPaths = allowSPA === false
       ? [controller.folder, path.join('/', pagesFolder, controller.folder, controller.classPath).replace(rootAppFolder, '')]
       : Object.values(controllers).map(controller => ([
@@ -173,6 +174,7 @@ async function getScriptTags(controller) {
   
   return `<script>
 window.serverRendered = true;
+window.allowSPA = ${allowSPA};
 window.pagesFolder = '${pagesFolder}';
 window.pageClassPaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassPaths, null, 2)};
 window.pageClassHTMLTemplatePaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths, null, 2)};
