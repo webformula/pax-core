@@ -4,7 +4,7 @@ import { configureApp } from './loader.js';
 let framework;
 
 export function middleware(options = {
-  pagesFolder: 'app/pages',
+  pageFolderPath: 'app/pages',
   path404: 'app/pages/404/page.html',
 
   /**

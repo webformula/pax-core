@@ -42,8 +42,8 @@ export default class Controller {
     return {};
   }
 
-  async renderTemplate(reqPath, pagesFolder) {
-    if (!this._templateString) this._templateString = await readFile(path.join(pagesFolder, this._folder, this._templatePath), 'utf-8');
+  async renderTemplate(reqPath, pageFolderPath) {
+    if (!this._templateString) this._templateString = await readFile(path.join(pageFolderPath, this._folder, this._templatePath), 'utf-8');
     const page = await this.getData(reqPath);
     return new Function('page', `return \`${this._templateString}\`;`).call(this, page);
   }

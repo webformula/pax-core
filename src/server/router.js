@@ -7,10 +7,11 @@ const CWD = process.cwd();
 const configData = {};
 
 export function register(params = {
-  pagesFolder,
+  pageFolderPath,
+  pageFolder,
+  appPath,
   path404,
   allowSPA,
-  rootAppFolder,
   controllers,
   controllerPathMap,
   pathRegexes
@@ -28,7 +29,7 @@ export async function handleRoute(urlPath, body, urlPathParameters, urlSearchPar
   const controller = configData.controllers[configData.controllerPathMap[matched.configuredPath]];
 
   try {
-    const pageContent = await controller.renderTemplate(cleanPath, configData.pagesFolder);
+    const pageContent = await controller.renderTemplate(cleanPath, configData.pageFolderPath);
     const scriptTags = await getScriptTags(controller);
     const indexTemplate = await getIndexTemplate();
     const index = renderTemplate(indexTemplate, { pageContent, scriptTags, pageTitle: controller.pageTitle });
@@ -52,7 +53,7 @@ function isStaticFile(cleanPath) {
 }
 
 async function staticHandler(reqPath) {
-  if (reqPath === '/') reqPath = `/${configData.pagesFolder.replace(configData.rootAppFolder, '')}/home/page.html`;
+  if (reqPath === '/') reqPath = `/${configData.pageFolder}/home/page.html`;
   const extension = path.extname(reqPath);
 
   // for some reason the files can come through without pax-core in the path
@@ -73,7 +74,7 @@ async function staticHandler(reqPath) {
   // NOTE modify pax cor import for relative path
   // Allows the use of import '@webformula/pax-core'
   if (extension === '.js') {
-    const file = await readFile(path.join(CWD, configData.rootAppFolder, reqPath), 'utf-8');
+    const file = await readFile(path.join(CWD, configData.appPath, reqPath), 'utf-8');
 
     let fileData;
     if (file.includes('/@webformula')) fileData = res.send(file);
@@ -86,7 +87,7 @@ async function staticHandler(reqPath) {
     };
   }
 
-  const filePath = path.join(CWD, configData.rootAppFolder, reqPath);
+  const filePath = path.join(CWD, configData.appPath, reqPath);
   try {
     await access(filePath);
   } catch (e) {
@@ -96,7 +97,7 @@ async function staticHandler(reqPath) {
 }
 
 async function getIndexTemplate() {
-  if (!configData.indexTemplate) configData.indexTemplate = (await readFile(`${configData.pagesFolder}/index.html`)).toString();
+  if (!configData.indexTemplate) configData.indexTemplate = (await readFile(`${configData.pageFolderPath}/index.html`)).toString();
   return configData.indexTemplate;
 }
 
@@ -111,17 +112,17 @@ async function getScriptTags(controller) {
   if (!scriptTagsCache[cacheKey]) {
     scriptTagsCache[cacheKey] = {};
     scriptTagsCache[cacheKey].pageClassPaths = configData.allowSPA === false
-      ? [[controller.folder, path.join('/', configData.pagesFolder, controller.folder, controller.classPath).replace(configData.rootAppFolder, '')]]
+      ? [[controller.folder, path.join('/', configData.pageFolder, controller.folder, controller.classPath)]]
       : Object.values(configData.controllers).map(controller => ([
         controller.folder,
-        path.join('/', configData.pagesFolder, controller.folder, controller.classPath).replace(configData.rootAppFolder, '')
+        path.join('/', configData.pageFolder, controller.folder, controller.classPath)
       ]));
 
     scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths = configData.allowSPA === false
-      ? { [controller.folder]: path.join('/', configData.pagesFolder, controller.folder, controller.templatePath).replace(configData.rootAppFolder, '') }
+      ? { [controller.folder]: path.join('/', configData.pageFolder, controller.folder, controller.templatePath) }
       : Object.fromEntries(Object.values(configData.controllers).map(controller => ([
         controller.folder,
-        path.join('/', configData.pagesFolder, controller.folder, controller.templatePath).replace(configData.rootAppFolder, '')
+        path.join('/', configData.pageFolder, controller.folder, controller.templatePath)
       ])));
 
     scriptTagsCache[cacheKey].routeMap = configData.allowSPA === false
@@ -132,7 +133,7 @@ async function getScriptTags(controller) {
   return `<script>
 window.serverRendered = true;
 window.allowSPA = ${configData.allowSPA};
-window.pagesFolder = '${configData.pagesFolder}';
+window.pageFolder = '${configData.pageFolder}';
 window.pageClassPaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassPaths, null, 2)};
 window.pageClassHTMLTemplatePaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths, null, 2)};
 window.routeMap = ${JSON.stringify(scriptTagsCache[cacheKey].routeMap, null, 2)};

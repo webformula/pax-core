@@ -8,41 +8,37 @@ const controllerFolderPartRegex = /\/(.*?)\//;
 
 
 export async function configureApp(options) {
-  const pagesFolder = options?.pagesFolder || 'app/pages';
   const path404 = options?.path404 || 'app/pages/404/page.html';
   const allowSPA = options?.allowSPA || false;
-  let rootAppFolder;
+  const pageFolderPath = options?.pageFolderPath || 'app/pages';
+  const splitPageFolderPath = pageFolderPath.split('/');
+  const pageFolder = splitPageFolderPath.pop();
+  const appPath = splitPageFolderPath.join('/');
 
-  // TODO can i do this better?
-  // root folder needed for file sending. Might be able to remove the need for it.
-  if (pagesFolder.includes('/')) {
-    const match = pagesFolder.match(/(^[^\/]*\/)/, '');
-    if (match) rootAppFolder = match[1];
-  }
-
-  const results = await loadApp(pagesFolder);
+  const results = await loadApp(pageFolderPath);
   register({
-    pagesFolder,
+    pageFolderPath,
+    pageFolder,
+    appPath,
     path404,
     allowSPA,
-    rootAppFolder,
     ...results
   });
 }
 
-async function loadApp(pagesFolder) {
+async function loadApp(pageFolderPath) {
   const controllers = {};
   const controllerPathMap = {};
-  const pages = await readdir(pagesFolder);
+  const pages = await readdir(pageFolderPath);
 
   await Promise.all(
     pages
       .filter(item => path.extname(item) === '') // folders only
       .map(async item => {
-        const controllerPath = path.join(CWD, pagesFolder, item, 'controller.js');
+        const controllerPath = path.join(CWD, pageFolderPath, item, 'controller.js');
         try {
           await access(controllerPath);
-          const results = await registerController(controllerPath, pagesFolder);
+          const results = await registerController(controllerPath, pageFolderPath);
           controllers[results.folder] = results.controller;
           Object.assign(controllerPathMap, results.controllerPathMap);
         } catch (e) { }
@@ -58,9 +54,9 @@ async function loadApp(pagesFolder) {
   };
 }
 
-async function registerController(controllerPath, pagesFolder) {
+async function registerController(controllerPath, pageFolderPath) {
   const controllerPathMap = {};
-  const folder = controllerPath.split(pagesFolder)[1].match(controllerFolderPartRegex)[1];
+  const folder = controllerPath.split(pageFolderPath)[1].match(controllerFolderPartRegex)[1];
   const imported = await import(controllerPath);
   imported.default.folder = folder;
   controllerPathMap[folder] = folder;
