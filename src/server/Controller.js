@@ -42,9 +42,9 @@ export default class Controller {
     return {};
   }
 
-  async renderTemplate(req, pagesFolder) {
+  async renderTemplate(reqPath, pagesFolder) {
     if (!this._templateString) this._templateString = await readFile(path.join(pagesFolder, this._folder, this._templatePath), 'utf-8');
-    const page = await this.getData(req);
+    const page = await this.getData(reqPath);
     return new Function('page', `return \`${this._templateString}\`;`).call(this, page);
   }
 }

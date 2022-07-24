@@ -15,10 +15,7 @@ let indexTemplate;
 let path404;
 
 
-export function routeMiddleware(options = {
-  pagesFolder: 'app/pages',
-  path404: 'app/pages/404/page.html'
-}) {
+export function configureApp(options) {
   pagesFolder = options?.pagesFolder || 'app/pages';
   path404 = options?.path404 || 'app/pages/404/page.html';
 
@@ -30,33 +27,34 @@ export function routeMiddleware(options = {
   }
 
   loadControllers();
-
-  // NOTE express specific right now
-  return async function routeMiddleware(req, res, next) {
-    const cleanPath = cleanReqPath(req.path);
-    if (cleanPath === '') cleanPath = 'home';
-
-    // send static file
-    if (isStaticFile(cleanPath)) return await staticHandler(req, res);
-
-    const matched = matchPath(cleanPath, pathRegexes);
-    if (!matched) next(new Error('no matching path'));
-
-    const controller = controllers[controllerPathMap[matched.configuredPath]];
-
-    try {
-      const pageContent = await controller.renderTemplate(req, pagesFolder);
-      const scriptTags = await getScriptTags(controller);
-      const indexTemplate = await getIndexTemplate();
-      const index = renderTemplate(indexTemplate, { pageContent, scriptTags, pageTitle: controller.pageTitle });
-
-      res.send(index);
-    } catch (e) {
-      return next(e);
-    }
-  }
 }
 
+export async function handleRoute(urlPath, body, urlPathParameters, urlSearchParameters) {
+  const cleanPath = cleanReqPath(urlPath);
+  if (cleanPath === '') cleanPath = 'home';
+
+  // send static file
+  if (isStaticFile(cleanPath)) return await staticHandler(cleanPath);
+
+  const matched = matchPath(cleanPath, pathRegexes);
+  if (!matched) throw Error('no matching path');
+
+  const controller = controllers[controllerPathMap[matched.configuredPath]];
+
+  try {
+    const pageContent = await controller.renderTemplate(cleanPath, pagesFolder);
+    const scriptTags = await getScriptTags(controller);
+    const indexTemplate = await getIndexTemplate();
+    const index = renderTemplate(indexTemplate, { pageContent, scriptTags, pageTitle: controller.pageTitle });
+    return {
+      headers: { 'Content-Type': 'text/html' },
+      statusCode: 200,
+      responseBody: index
+    };
+  } catch (error) {
+    return { error };
+  }
+}
 
 
 async function loadControllers() {
@@ -65,9 +63,10 @@ async function loadControllers() {
     pages
       .filter(item => path.extname(item) === '')
       .map(async item => {
+        const itemPath = path.join(CWD, pagesFolder, item, 'controller.js');
         try {
-          await access(path.join(CWD, pagesFolder, item, 'controller.js'));
-          await registerController(path.join(CWD, pagesFolder, item, 'controller.js'));
+          await access(itemPath);
+          await registerController(itemPath);
         } catch (e) { }
       })
   );
@@ -79,7 +78,7 @@ async function registerController(controllerPath) {
   imported.default.folder = folder;
   controllers[folder] = imported.default;
   controllerPathMap[folder] = folder;
-  imported.default.routes.forEach(route => {
+  (imported.default.routes || []).forEach(route => {
     controllerPathMap[route] = folder;
   });
   pathRegexes = buildPathRegexes(Object.keys(controllerPathMap));
@@ -94,39 +93,48 @@ function isStaticFile(cleanPath) {
   return true;
 }
 
-async function staticHandler(req, res) {
-  let reqPath = req.path;
+async function staticHandler(reqPath) {
   if (reqPath === '/') reqPath = `/${pagesFolder.replace(rootAppFolder, '')}/home/page.html`;
   const extension = path.extname(reqPath);
 
   // for some reason the files can come through without pax-core in the path
   // auto map to client code
-  if (reqPath.includes('/@webformula')) {
+  if (reqPath.includes('@webformula')) {
     if (!extension) {
-      return res.sendFile(path.join(CWD, 'node_modules', '@webformula/pax-core/src/client/index.js'));
+      return {
+        filePath: path.join(CWD, 'node_modules', '@webformula/pax-core/src/client/index.js')
+      };
     }
 
     // make sure pax-core is in path
-    return res.sendFile(path.join(CWD, 'node_modules/@webformula/pax-core/src/client', reqPath.replace('@webformula/pax-core/client', '').replace('@webformula/pax-core', '').replace('@webformula', '')));
+    return {
+      filePath: path.join(CWD, 'node_modules/@webformula/pax-core/src/client', reqPath.replace('@webformula/pax-core/client', '').replace('@webformula/pax-core', '').replace('@webformula', ''))
+    };
   }
 
   // NOTE modify pax cor import for relative path
   // Allows the use of import '@webformula/pax-core'
   if (extension === '.js') {
     const file = await readFile(path.join(CWD, rootAppFolder, reqPath), 'utf-8');
-    res.set('Content-Type', 'application/javascript');
-    if (file.includes('/@webformula')) res.send(file);
-    return res.send(file.replace('@webformula', '/@webformula'));
+
+    let fileData;
+    if (file.includes('/@webformula')) fileData = res.send(file);
+    else fileData = file.replace('@webformula', '/@webformula');
+
+    return {
+      headers: { 'Content-Type': 'application/javascript' },
+      statusCode: 200,
+      responseBody: fileData
+    };
   }
 
   const filePath = path.join(CWD, rootAppFolder, reqPath);
   try {
     await access(filePath);
   } catch (e) {
-    console.log(path.join(CWD, path404))
-    return res.sendFile(path.join(CWD, path404));
+    return { filePath: path.join(CWD, path404) };
   }
-  return res.sendFile(filePath);
+  return { filePath };
 }
 
 async function getIndexTemplate() {

@@ -1,7 +1,7 @@
 import Controller from './Controller.js';
-import { routeMiddleware } from './router.js';
+import { middleware } from './middleware.js';
 
 export {
   Controller,
-  routeMiddleware
+  middleware
 }
