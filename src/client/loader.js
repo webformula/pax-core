@@ -1,25 +1,32 @@
 import { parseURL } from './helper.js';
 import { registerPage } from './router.js';
 
+const pageConfigurations = window.pageConfigurations;
+
 export async function loadPages() {
   const path = parseURL();
 
-  // built on server side
-  const pageClassPaths = window.pageClassPaths.sort((a) => a[0] === path ? -1 : 1);
-  await Promise.all(pageClassPaths.map(async ([route, path]) => {
-    const instance = await loadJavascript(path);
-    const htmlTemplatePath = window.pageClassHTMLTemplatePaths[route];
-    let HTMLTemplateString;
-    if (htmlTemplatePath) HTMLTemplateString = await loadHTML(htmlTemplatePath);
-    registerPage(instance.default, { route, HTMLTemplateString });
-  }));
+  // make sure the current page is loaded first
+  // if allowSPA = true, then all pages will be loaded
+  pageConfigurations.sort((a) => a[0] === path ? -1 : 1);
 
-
-  // TODO build from static client files
-}
-
-async function loadJavascript(path) {
-  return await import(path);
+  pageConfigurations.map(async ({
+    defaultRoute,
+    routes,
+    pageTitle,
+    filePath,
+    templatePath
+  }) => {
+    const pageModule = await import(filePath);
+    const templateString = await loadHTML(templatePath);
+    registerPage({
+      defaultRoute,
+      routes,
+      pageTitle,
+      pageClass: pageModule.default,
+      templateString
+    });
+  });
 }
 
 async function loadHTML(path) {

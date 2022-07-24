@@ -110,41 +110,28 @@ const scriptTagsCache = {};
 async function getScriptTags(controller) {
   const cacheKey = `${controller.folder}-allowSPA${configData.allowSPA}`;
   if (!scriptTagsCache[cacheKey]) {
-    scriptTagsCache[cacheKey] = {};
-    scriptTagsCache[cacheKey].pageClassPaths = configData.allowSPA === false
-      ? [[controller.folder, path.join('/', configData.pageFolder, controller.folder, controller.classPath)]]
-      : Object.values(configData.controllers).map(controller => ([
-        controller.folder,
-        path.join('/', configData.pageFolder, controller.folder, controller.classPath)
-      ]));
-
-    scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths = configData.allowSPA === false
-      ? { [controller.folder]: path.join('/', configData.pageFolder, controller.folder, controller.templatePath) }
-      : Object.fromEntries(Object.values(configData.controllers).map(controller => ([
-        controller.folder,
-        path.join('/', configData.pageFolder, controller.folder, controller.templatePath)
-      ])));
-
-    scriptTagsCache[cacheKey].routeMap = configData.allowSPA === false
-      ? Object.fromEntries(Object.entries(configData.controllerPathMap).filter(([_, folder]) => folder === controller.folder))
-      : configData.controllerPathMap;
-
-    scriptTagsCache[cacheKey].pageTitles = configData.allowSPA === false
-      ? { [controller.folder]: controller.pageTitle }
-      : Object.fromEntries(Object.values(configData.controllers).map(controller => ([
-        controller.folder,
-        controller.pageTitle
-      ])));
+    scriptTagsCache[cacheKey] = configData.allowSPA === false
+      ? [{
+          defaultRoute: controller.folder,
+          routes: [...new Set([controller.folder, ...(controller.routes || [])])],
+          pageTitle: controller.pageTitle,
+          filePath: path.join('/', configData.pageFolder, controller.folder, controller.classPath),
+          templatePath: path.join('/', configData.pageFolder, controller.folder, controller.templatePath)
+        }]
+      : Object.values(configData.controllers).map(controller => ({
+        defaultRoute: controller.folder,
+        routes: [...new Set([controller.folder, ...(controller.routes || [])])],
+        pageTitle: controller.pageTitle,
+        filePath: path.join('/', configData.pageFolder, controller.folder, controller.classPath),
+        templatePath: path.join('/', configData.pageFolder, controller.folder, controller.templatePath)
+      }));
   }
   
   return `<script>
 window.serverRendered = true;
 window.allowSPA = ${configData.allowSPA};
 window.pageFolder = '${configData.pageFolder}';
-window.pageClassPaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassPaths, null, 2)};
-window.pageClassHTMLTemplatePaths = ${JSON.stringify(scriptTagsCache[cacheKey].pageClassHTMLTemplatePaths, null, 2)};
-window.pageTitles = ${JSON.stringify(scriptTagsCache[cacheKey].pageTitles, null, 2)};
-window.routeMap = ${JSON.stringify(scriptTagsCache[cacheKey].routeMap, null, 2)};
+window.pageConfigurations = ${JSON.stringify(scriptTagsCache[cacheKey], null, 2)};
 </script>
 
 <script src="/@webformula/pax-core/client" type="module"></script>`;

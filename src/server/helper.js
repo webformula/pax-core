@@ -4,7 +4,6 @@ const wildcardRegex = /\*/g;
 const replaceWidCardString = '(?:.*)';
 const followedBySlashRegexString = '(?:\/$|$)';
 const leadingSlashRegex = /^\//;
-const urlHashRegex = /.*#/;
 
 
 export function parseURL(url) {

@@ -5,25 +5,20 @@ export default class Page {
     this._searchParameters = undefined;
   }
 
+  set pageTitle(value) {
+    this._pageTitle = value;
+  }
+
   get searchParameters() {
     return this._searchParameters;
   }
+
   get urlParameters() {
     return this._urlParameters;
   }
   
-  get templateString() {
-    return this._templateString;
-  }
   set templateString(value) {
     this._templateString = value;
-  }
-
-  get pageTitle() {
-    return this._pageTitle;
-  }
-  set pageTitle(value) {
-    this._pageTitle = value;
   }
 
   // override
@@ -38,8 +33,8 @@ export default class Page {
 
     await this.beforeRender();
 
-    if (!this.templateString) throw Error('No templateString');
-    const renderedTemplate = new Function('page', `return \`${this.templateString}\`;`).call(this, this);
+    if (!this._templateString) throw Error('No templateString');
+    const renderedTemplate = new Function('page', `return \`${this._templateString}\`;`).call(this, this);
 
     // TODO replace with setHTML when supported. https://developer.mozilla.org/en-US/docs/Web/API/Element/setHTML
     // currently security concerns should be mitigated by the template literal
@@ -56,12 +51,5 @@ export default class Page {
   }) {
     this._urlParameters = params?.urlParameters || {};
     this._searchParameters = params?.searchParameters || {};
-
-    this.onUrlData();
-  }
-
-  // override
-  onUrlData() {
-
   }
 }

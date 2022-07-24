@@ -4,25 +4,12 @@ import {
   matchPath
 } from './helper.js';
 
-const serverRendered = window.serverRendered || false;
-const allowSPA = !serverRendered ? true : window.allowSPA;
-const routeMap = window.routeMap;
-const pageTitles = window.pageTitles;
-const pageClasses = {};
-const pageTemplateStrings = {};
-let pathRegexes = [];
+const allowSPA = window.allowSPA;
+const registeredPages = {};
+const routeMap = [];
 let initialRouteCompleted = false;
 
 
-export function registerPage(pageClass, options = { route: 'path', HTMLTemplateString }) {
-  pageTemplateStrings[options.route] = options?.HTMLTemplateString;
-  pageClasses[options.route] = pageClass;
-  handleInitialRoute();
-}
-
-
-
-if (routeMap) pathRegexes = buildPathRegexes(Object.keys(routeMap));
 if (allowSPA === true) {
   document.addEventListener('click', async event => {
     // TODO how do i handle external links
@@ -33,25 +20,49 @@ if (allowSPA === true) {
 }
 
 
+export function registerPage({
+  defaultRoute,
+  routes,
+  pageTitle,
+  pageClass,
+  templateString
+}) {
+  registeredPages[defaultRoute] = {
+    defaultRoute,
+    routes,
+    pageTitle,
+    pageClass,
+    templateString
+  };
+
+  routeMap.push(...buildPathRegexes(routes, defaultRoute));
+  handleInitialRoute();
+}
+
+
+
+
 async function hookUpPage(url) {
   const currentPage = window.page;
   const path = parseURL(url);
-  const match = matchPath(path, pathRegexes);
+  const match = matchPath(path, routeMap);
   if (!match) {
     if (initialRouteCompleted === true) console.warn(`No page found for url: ${url}`);
     return;
   }
 
-  const pageClassRoute = routeMap[match.configuredPath];
-  if (!pageClassRoute || !pageClasses[pageClassRoute]) {
+  const pageConfiguration = registeredPages[match.configuredPath];
+  if (!pageConfiguration) {
     if (initialRouteCompleted === true) console.warn(`No page found for url: ${url}`);
     return;
   }
 
-  const nextPage = new pageClasses[pageClassRoute]();
-  if (serverRendered === true && pageTemplateStrings[pageClassRoute]) nextPage.templateString = pageTemplateStrings[pageClassRoute];
-  if (serverRendered === true && pageTitles[pageClassRoute]) nextPage.pageTitle = pageTitles[pageClassRoute];
+  console.log(pageConfiguration);
+  const nextPage = new pageConfiguration.pageClass();
+  nextPage.pageTitle = pageConfiguration.pageTitle;
+  nextPage.templateString = pageConfiguration.templateString;
 
+  let isRendered = initialRouteCompleted === false;
   // used for initial page. Pages are dynamically loaded; meaning this could be called before page is available.
   if (initialRouteCompleted !== true) initialRouteCompleted = true;
 
@@ -65,7 +76,7 @@ async function hookUpPage(url) {
     searchParameters: {}
   });
 
-  if (!urlMatches || (urlMatches && serverRendered !== true)) await nextPage._renderTemplate();
+  if (!isRendered) await nextPage._renderTemplate();
 
   nextPage.connectedCallback();
 }
