@@ -1,53 +1,50 @@
-import { handleRoute } from './router.js';
-import { configureApp } from './loader.js';
+import nodePath from 'node:path';
 
-let framework;
-
-export function middleware(options = {
-  pageFolderPath: 'app/pages',
-  path404: 'app/pages/404/page.html',
-
-  /**
-   * If false then only the code for the requested page will be loaded
-   * If true then all code is loaded and it will start working like a SPA
-   */
-  allowSPA: false
-}) {
-  configureApp(options);
-
-  return async function() {
-    determineFramework(...arguments);
-    if (framework === 'express') return expressMiddleware(...arguments);
-  }
-}
+const CWD = process.cwd();
 
 
-function determineFramework() {
-  if (framework) return;
-
+export function getFrameworkMiddleware() {
   if (arguments.length === 3) {
-    if (arguments[0].constructor.toString().includes('IncomingMessage')) framework = 'express';
+    if (arguments[0].constructor.toString().includes('IncomingMessage')) return expressMiddleware;
   }
-
-  if (!framework) framework = 'node';
 }
 
 
-async function expressMiddleware(req, res, next) {
+async function expressMiddleware(req, res, next, params, callback) {
   try {
-    const { statusCode, responseBody, headers, filePath, error, redirect } = await handleRoute(req.path, req.body, req.params, req.query);
+    const { statusCode, responseBody, headers, error, filePath } = await callback({
+      path: req.path,
+      urlParameters: req.params
+    });
     if (error) return next(error);
-    if (filePath) return res.sendFile(filePath);
-    if (redirect) return res.redirect(redirect);
-    
+    if (filePath) {
+      return res.sendFile(cleanFilePath(filePath, params.appRoot));
+    }
+
     if (headers) {
       Object.entries(headers).forEach(([name, value]) => {
         res.set(name, value);
       });
     }
+
     if (statusCode) res.status(statusCode);
     res.send(responseBody);
   } catch (e) {
     next(e);
   }
+}
+
+
+function cleanFilePath(filePath, appRoot) {
+  const extension = nodePath.extname(filePath);
+  if (filePath.includes('@webformula')) {
+    if (!extension) {
+      return nodePath.join(CWD, 'node_modules', '@webformula/pax-core/src/client/index.js');
+    }
+
+    // make sure pax-core is in path
+    return nodePath.join(CWD, 'node_modules/@webformula/pax-core/src/client', filePath.replace('@webformula/pax-core/client', '').replace('@webformula/pax-core', '').replace('@webformula', ''))
+  }
+
+  return nodePath.join(CWD, appRoot, filePath);
 }

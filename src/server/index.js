@@ -1,7 +1,5 @@
-import Controller from './Controller.js';
-import { middleware } from './middleware.js';
+import App from './App.js';
 
 export {
-  Controller,
-  middleware
+  App
 }

@@ -16,7 +16,7 @@ export default class Page {
   get urlParameters() {
     return this._urlParameters;
   }
-  
+
   set templateString(value) {
     this._templateString = value;
   }
@@ -32,7 +32,7 @@ export default class Page {
     if (!pageContent) throw Error('Could not find <page-content>');
 
     await this.beforeRender();
-
+    
     if (!this._templateString) throw Error('No templateString');
     const renderedTemplate = new Function('page', `return \`${this._templateString}\`;`).call(this, this);
 

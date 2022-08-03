@@ -1,35 +1,51 @@
-import { parseURL } from './helper.js';
 import { registerPage } from './router.js';
 
-const pageConfigurations = window.pageConfigurations;
+const routes = window.routes.map(route => ({
+  ...route,
+  routeRegex: new RegExp(route.routeRegexString)
+}));
+const files = [];
+
 
 export async function loadPages() {
-  const path = parseURL();
-
+  const path = location.pathname;
   // make sure the current page is loaded first
   // if allowSPA = true, then all pages will be loaded
-  pageConfigurations.sort((a) => a[0] === path ? -1 : 1);
 
-  pageConfigurations.map(async ({
-    defaultRoute,
-    routes,
+  routes.sort(({ routeRegex }) => path.match(routeRegex) !== null ? -1 : 1);
+  routes.map(async ({
+    url,
     pageTitle,
-    filePath,
-    templatePath
+    template,
+    controller,
+    routeRegex
   }) => {
-    const pageModule = await import(filePath);
-    const templateString = await loadHTML(templatePath);
+    const pageModule = controller && await importJS(controller);
+    const templateString = await loadHTML(template);
     registerPage({
-      defaultRoute,
-      routes,
+      url,
       pageTitle,
-      pageClass: pageModule.default,
-      templateString
+      pageClass: pageModule?.default,
+      templateString,
+      routeRegex
     });
   });
 }
 
+
+async function importJS(path) {
+  if (!files[path]) {
+    files[path] = import('/' + path);
+  }
+  return files[path];
+}
+
 async function loadHTML(path) {
-  const response = await fetch(path);
-  return await response.text();
+  if (!files[path]) files[path] = fetchHTML(path);
+  return files[path];
+}
+
+async function fetchHTML(path) {
+  const response = await fetch('/' + path);
+  return response.text();
 }
