@@ -43,8 +43,14 @@ function doesUrlMatchWindowLocation(url) {
 }
 
 function matchRoute(path, routes) {
-  const found = Object.values(routes).find(({ routeRegex }) => path.match(routeRegex) !== null);
-  if (!found) return;
+  let found = Object.values(routes).find(({ routeRegex }) => path.match(routeRegex) !== null);
+  if (!found) {
+    if (routes._notfound) return {
+      ...routes._notfound,
+      urlParameters: {}
+    };
+    else return;
+  }
 
   const match = path.match(found.routeRegex);
   return {
@@ -57,12 +63,13 @@ async function hookUpPage(url) {
   const currentPage = window.page;
   const path = url || location.pathname;
   const routeMatch = matchRoute(path, registeredPages);
+  
   if (!routeMatch) {
     if (initialRouteCompleted === true) console.warn(`No page found for url: ${url}`);
     return;
   }
 
-  const nextPage = new routeMatch.pageClass();
+  const nextPage = routeMatch.pageClass ? new routeMatch.pageClass() : {};
   nextPage.pageTitle = routeMatch.pageTitle;
   nextPage.templateString = routeMatch.templateString;
 
@@ -76,11 +83,11 @@ async function hookUpPage(url) {
 
   if (currentPage) currentPage.disconnectedCallback();
   window.page = nextPage;
-  nextPage._setUrlData({
+  if (nextPage._setUrlData) nextPage._setUrlData({
     urlParameters: routeMatch.urlParameters,
     searchParameters: {}
   });
 
   if (!isRendered) await nextPage._renderTemplate();
-  nextPage.connectedCallback();
+  if (nextPage.connectedCallback) nextPage.connectedCallback();
 }

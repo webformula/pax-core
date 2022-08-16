@@ -10,7 +10,7 @@ export default class App {
   #SPA;
   #routes;
   #indexTemplateMethod;
-  #scriptTagsCache;
+  #scriptTagsCache = {};
   #routesArray = [];
   #containsVariableOrWildcardRegex = /\/:|\*/g;
   #parameterRegex = /([:*])(\w+)/g;
@@ -32,7 +32,14 @@ export default class App {
     this.#indexTemplate = params?.indexTemplate || 'pages/index.html';
     this.#notFoundTemplate = params?.notFoundTemplate || 'pages/404.html';
     this.#routes = {};
-    this.#SPA = params?.SPA === false ? false : true; 
+    this.#SPA = params?.SPA === false ? false : true;
+
+    if (params.notFoundTemplate) {
+      this.route({
+        url: '_notfound',
+        template: params.notFoundTemplate
+      });
+    }
 
     this.#init();
   }
@@ -53,7 +60,7 @@ export default class App {
         try {
           const pageData = await routeData.callback({ path, urlParameters: routeData.urlParameters });
           const pageContent = routeData.templateMethod(pageData);
-          const scriptTags = this.#getScriptTags(this.#routes);
+          const scriptTags = this.#getScriptTags(this.#routes, routeData);
           const index = this.#indexTemplateMethod({ pageContent, scriptTags, pageTitle: routeData.pageTitle || '' });
           return {
             headers: { 'Content-Type': 'text/html' },
@@ -88,20 +95,24 @@ export default class App {
     this.#indexTemplateMethod = await this.#getIndexTemplateMethod();
   }
 
-  #getScriptTags(routes) {
-    if (!this.#scriptTagsCache) {
+  #getScriptTags(routes, routeData = { url: '_none' }) {
+    console.log(routeData);
+    if (!this.#scriptTagsCache[routeData.url]) {
       const routesData = Object.values(routes).map(route => ({
         ...route,
         routeRegexString: route.routeRegex.source
       }));
-      this.#scriptTagsCache = `<script>
+      // TODO handle script path not having leading /
+      this.#scriptTagsCache[routeData.url] = `<script>
 window.SPA = ${this.#SPA};
 window.routes = ${JSON.stringify(routesData, null, 2)};
 </script>
-<script src="/@webformula/pax-core/client2" type="module"></script>`;
+${routeData.controller ? `<script src="/${routeData.controller}" type="module"></script>` : ''}
+<script src="/@webformula/pax-core/client" type="module"></script>`;
+// ${routeData.template ? `<link rel="prefetch" href="${routeData.template}" />` : ''}
     }
     
-    return this.#scriptTagsCache;
+    return this.#scriptTagsCache[routeData.url];
   }
 
   #buildRouteRegex(route) {
@@ -131,7 +142,7 @@ window.routes = ${JSON.stringify(routesData, null, 2)};
 
   #isStaticFile(routePath) {
     const extension = nodePath.extname(routePath);
-    if (extension && extension !== '.html') return true;
+    if (extension) return true;
     if (routePath.includes('@webformula/pax-core')) return true;
     if (routePath === 'home') true;
     return false;
