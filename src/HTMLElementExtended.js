@@ -1,3 +1,5 @@
+import { loadHTML } from "./main.js";
+
 const invalidIdCharRegex = /-|\s/g;
 const componentIdReplaceRegex = /(?<![\w])(component)(?![\w])/g;
 
@@ -22,10 +24,6 @@ export default class HTMLElementExtended extends HTMLElement {
     return /*html*/'';
   }
 
-  css() {
-    return /*css*/'';
-  }
-
   async render() {
     if (!this.#initiated) {
       if (this.id.match(invalidIdCharRegex) !== null) console.warn(`cannot use 'component' methods if the id contains - or spaces : ${this.id}`);
@@ -42,8 +40,15 @@ export default class HTMLElementExtended extends HTMLElement {
     await this.beforeRender();
 
     let renderedTemplate;
-    if (this.templateString) renderedTemplate = new Function(`return \`${this.templateString}\`;`).call(this, this);
-    else renderedTemplate = this.template.call(this, this);
+    if (this.templateString) {
+      if (this.templateString.match(/.*\.html$/) !== null) {
+        this.templateString = await loadHTML(this.templateString);
+      }
+      renderedTemplate = new Function(`return \`${this.templateString}\`;`).call(this, this);
+    } else {
+      renderedTemplate = this.template.call(this, this);
+    }
+
     renderedTemplate = renderedTemplate.replace(componentIdReplaceRegex, this.id);
     this.rootElement.innerHTML = renderedTemplate;
 
