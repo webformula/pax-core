@@ -1,9 +1,9 @@
-import Page from './src/client/Page.js';
-import router from './src/client/router.js';
-import HTMLElementExtended from './src/client/HTMLElementExtended.js';
+import Page from './src/Page.js';
+import HTMLElementExtended from './src/HTMLElementExtended.js';
+import { registerPage } from './src/main.js';
 
 export {
   Page,
-  router,
+  registerPage,
   HTMLElementExtended
 }
