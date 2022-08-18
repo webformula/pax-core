@@ -8,13 +8,13 @@ export default class HTMLElementExtended extends HTMLElement {
   // static templateString = 'string or path of html';
   // static cssString = 'string or path of css';
 
-  _templateId = `template${parseInt(Math.random() * 99999)}`;
+  #templateId = `template${parseInt(Math.random() * 99999)}`;
   #initiated = false;
 
   constructor() {
     super();
 
-    this.id = this.id || this._templateId;
+    this.id = this.id || this.#templateId;
   }
 
   async beforeRender() { }
