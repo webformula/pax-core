@@ -66,8 +66,14 @@ async function hookUpPage(url) {
     }
   }
 
+  // TODO look into when we should fire location change.
+  // If the location change does not file when urls match, then it can mess up highlight js in the docs
   const urlMatches = doesUrlMatchWindowLocation(url);
-  if (!urlMatches) window.history.pushState({}, '', url);
+  // window.dispatchEvent(new Event('locationchange'));
+  if (!urlMatches) {
+    window.history.pushState({}, '', url);
+    window.dispatchEvent(new Event('locationchange'));
+  }
 
   if (currentPage && currentPage.disconnectedCallback) currentPage.disconnectedCallback();
   window.page = nextPage;
