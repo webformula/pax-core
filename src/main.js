@@ -44,8 +44,11 @@ export async function loadHTML(path) {
 
 async function hookUpPage(url) {
   const currentPage = window.page;
+  if (currentPage && url === location.pathname) return;
+  
   const path = url || location.pathname;
   let routeMatch = matchRoute(path);
+  if (currentPage === path) return;
 
   if (!routeMatch) {
     // if (notFoundPage) {
@@ -83,6 +86,7 @@ async function hookUpPage(url) {
   });
 
   await nextPage._renderTemplate();
+  document.querySelector('html').scrollTop = 0;
   if (nextPage.connectedCallback) nextPage.connectedCallback();
 }
 

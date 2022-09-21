@@ -1,14 +1,10 @@
 import { loadHTML } from "./main.js";
 
-const invalidIdCharRegex = /-|\s/g;
-const componentIdReplaceRegex = /(?<![\w])(component)(?![\w])/g;
-
 export default class HTMLElementExtended extends HTMLElement {
   useShadowRoot = false;
   // static templateString = 'string or path of html';
   // static cssString = 'string or path of css';
 
-  // #templateId = `template${parseInt(Math.random() * 99999)}`;
   #initiated = false;
 
   constructor() {
@@ -26,7 +22,6 @@ export default class HTMLElementExtended extends HTMLElement {
 
   async render() {
     if (!this.#initiated) {
-      // if (this.id.match(invalidIdCharRegex) !== null) console.warn(`cannot use 'component' methods if the id contains - or spaces : ${this.id}`);
       if (this.useShadowRoot) {
         this.attachShadow({ mode: 'open' });
         this.rootElement = this.shadowRoot;
@@ -49,7 +44,6 @@ export default class HTMLElementExtended extends HTMLElement {
       renderedTemplate = this.template.call(this, this);
     }
 
-    // renderedTemplate = renderedTemplate.replace(componentIdReplaceRegex, this.id);
     this.rootElement.innerHTML = renderedTemplate;
 
     await this.afterRender();
