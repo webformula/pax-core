@@ -10,7 +10,7 @@ document.addEventListener('click', async event => {
   // TODO how do i handle external links
   if (!event.target.matches('a[href]')) return;
   event.preventDefault();
-  hookUpPage(new URL(event.target.href).pathname);
+  hookUpPage(new URL(event.target.href));
 });
 
 
@@ -31,7 +31,7 @@ export function registerPage(pageClass, routes) {
     }));
 
     const match = location.pathname.match(routeRegex);
-    if (match !== null) hookUpPage(location.pathname);
+    if (match !== null) hookUpPage(location);
   });
 }
 
@@ -41,10 +41,18 @@ export async function loadHTML(path) {
 }
 
 
+async function handleHashChange(locationObject) {
+  const hash = locationObject.hash;
+  if (hash === location.hash) return;
+  window.history.pushState({}, '', hash);
+  if (hash) window.dispatchEvent(new Event('hashchange'));
+}
 
-async function hookUpPage(url) {
+
+async function hookUpPage(locationObject) {
+  const url = locationObject.pathname;
   const currentPage = window.page;
-  if (currentPage && url === location.pathname) return;
+  if (currentPage && url === location.pathname) return handleHashChange(locationObject);
   
   const path = url || location.pathname;
   let routeMatch = matchRoute(path);
@@ -72,11 +80,14 @@ async function hookUpPage(url) {
   // TODO look into when we should fire location change.
   // If the location change does not file when urls match, then it can mess up highlight js in the docs
   const urlMatches = doesUrlMatchWindowLocation(url);
+  const hashMatches = locationObject.hash === location.hash;
   // window.dispatchEvent(new Event('locationchange'));
   if (!urlMatches) {
-    window.history.pushState({}, '', url);
+    window.history.pushState({}, '', `${url}${locationObject.hash}`);
     window.dispatchEvent(new Event('locationchange'));
   }
+  if (locationObject.hash && !hashMatches) window.dispatchEvent(new Event('hashchange'));
+  
 
   if (currentPage && currentPage.disconnectedCallback) currentPage.disconnectedCallback();
   window.page = nextPage;
