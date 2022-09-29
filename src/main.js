@@ -7,8 +7,11 @@ const routeConfigs = [];
 const files = {};
 
 document.addEventListener('click', async event => {
-  // TODO how do i handle external links
   if (!event.target.matches('a[href]')) return;
+
+  // allow external links
+  if (event.target.getAttribute('href').includes('://')) return;
+
   event.preventDefault();
   hookUpPage(new URL(event.target.href));
 });
