@@ -87,11 +87,26 @@ async function hookUpPage(locationObject, back = false) {
 
   const urlMatches = doesUrlMatchWindowLocation(url);
   const hashMatches = locationObject.hash === location.hash;
-  if (back === true || !urlMatches) {
+  if (!urlMatches) {
     window.history.pushState({}, '', `${url}${locationObject.hash}`);
     window.dispatchEvent(new Event('mdwPageChange'));
+
+  // there is a delay in the render when hitting the back. this will account for that
+  } else if (back === true) {
+    setTimeout(() => {
+      window.history.pushState({}, '', `${url}${locationObject.hash}`);
+      window.dispatchEvent(new Event('mdwPageChange'));
+    }, 0);
   }
+
   if (locationObject.hash && !hashMatches) window.dispatchEvent(new Event('hashchange'));
+
+  // there is a delay in the render when hitting the back. this will account for that
+  if (back === true && location.hash) {
+    setTimeout(() => {
+      window.dispatchEvent(new Event('hashchange'));
+    }, 0);
+  }
   
 
   if (currentPage && currentPage.disconnectedCallback) currentPage.disconnectedCallback();
@@ -102,7 +117,7 @@ async function hookUpPage(locationObject, back = false) {
   });
 
   await nextPage._renderTemplate();
-  document.querySelector('html').scrollTop = 0;
+  document.querySelector('body').scrollTop = 0;
   if (nextPage.connectedCallback) nextPage.connectedCallback();
 }
 
