@@ -16,6 +16,11 @@ document.addEventListener('click', async event => {
   hookUpPage(new URL(event.target.href));
 });
 
+window.addEventListener('popstate', event => {
+  hookUpPage(new URL(event.currentTarget.location), true);
+});
+
+
 
 export function registerPage(pageClass, routes) {
   routes = routes || pageClass.routes;
@@ -52,10 +57,10 @@ async function handleHashChange(locationObject) {
 }
 
 
-async function hookUpPage(locationObject) {
+async function hookUpPage(locationObject, back = false) {
   const url = locationObject.pathname;
   const currentPage = window.page;
-  if (currentPage && url === location.pathname) return handleHashChange(locationObject);
+  if (back === false && currentPage && url === location.pathname) return handleHashChange(locationObject);
   
   const path = url || location.pathname;
   let routeMatch = matchRoute(path);
@@ -80,14 +85,11 @@ async function hookUpPage(locationObject) {
     }
   }
 
-  // TODO look into when we should fire location change.
-  // If the location change does not file when urls match, then it can mess up highlight js in the docs
   const urlMatches = doesUrlMatchWindowLocation(url);
   const hashMatches = locationObject.hash === location.hash;
-  // window.dispatchEvent(new Event('locationchange'));
-  if (!urlMatches) {
+  if (back === true || !urlMatches) {
     window.history.pushState({}, '', `${url}${locationObject.hash}`);
-    window.dispatchEvent(new Event('locationchange'));
+    window.dispatchEvent(new Event('mdwPageChange'));
   }
   if (locationObject.hash && !hashMatches) window.dispatchEvent(new Event('hashchange'));
   
