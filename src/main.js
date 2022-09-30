@@ -14,6 +14,8 @@ document.addEventListener('click', async event => {
 
   event.preventDefault();
   hookUpPage(new URL(event.target.href));
+  // the prevent default keeps the link from loosing focus
+  event.target.blur();
 });
 
 window.addEventListener('popstate', event => {
