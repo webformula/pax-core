@@ -11,9 +11,11 @@ const routeConfigs = [];
 // intercept links to create single page app with normal urls
 // The backend will need to support this
 export function enableSPA() {
-  document.addEventListener('click', async event => {
-    if (!event.target.matches('a[href]')) return;
+  window.paxCoreSPA = true;
 
+  document.addEventListener('click', async event => {
+    if (!event.target.matches('[href]')) return;
+    
     // allow external links
     if (event.target.getAttribute('href').includes('://')) return;
 
@@ -55,7 +57,6 @@ function hookupAndRender(locationObject, back = false) {
   const url = locationObject.pathname;
   const currentPage = window.page;
   if (back === false && currentPage && url === location.pathname) return handleHashChange(locationObject);
-
 
   const path = url || location.pathname; // TODO check why defaulting is needed
   const routeMatch = matchRoute(path);
