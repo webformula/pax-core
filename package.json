@@ -16,7 +16,7 @@
   "author": "Ben Rubin (B-3PO)",
   "license": "MIT",
   "dependencies": {
-    "glob": "^7.1.3"
+    "glob": "^13.0.6"
   },
   "bugs": {
     "url": "https://github.com/webformula/pax-core/issues"
